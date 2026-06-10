@@ -859,7 +859,7 @@ var CHARACTERS = {
         G.flags.has_seal = true;
         addScore(20);
         print("You receive: <b>Mayor's Official Seal</b>", "loot");
-        setHint("You have the seal! Now find the Mayor and get official permission to deliver.");
+        setHint("You have the seal! Return to the Mayor at the village gate (go SOUTH) and TALK TO MAYOR.");
       } else if (item === "raven_feather") {
         print("\"My own feather,\" says the raven. \"Returned. This is either a philosophical gesture or you're very confused.\" It drops the Mayor's seal. \"Fine. It's sufficiently interesting.\"", "normal");
         removeFromInventory("raven_feather");
@@ -868,7 +868,7 @@ var CHARACTERS = {
         G.flags.has_seal = true;
         addScore(20);
         print("You receive: <b>Mayor's Official Seal</b>", "loot");
-        setHint("You have the seal! Find the Mayor.");
+        setHint("You have the seal! Return to the Mayor at the village gate (go SOUTH) and TALK TO MAYOR.");
       } else {
         print("The raven inspects your offering with professional disdain.", "normal");
         print("\"Bring me something interesting,\" it says. \"Or answer my riddle.\"", "normal");
@@ -965,6 +965,12 @@ function parseCommand(raw) {
     case "use":       cmdUse(rest); break;
     case "drink":     cmdDrink(rest); break;
     case "eat":       cmdEat(rest); break;
+    case "fight":     cmdFight(); break;
+    case "attack":    cmdFight(); break;
+    case "flee":      cmdFlee(); break;
+    case "run":       cmdFlee(); break;
+    case "outwit":    cmdOutwit(); break;
+    case "trick":     cmdOutwit(); break;
     case "knock":     cmdKnock(); break;
     case "deliver":   cmdDeliver(); break;
     case "riddle":    cmdRiddle(); break;
@@ -996,6 +1002,11 @@ function parseCommand(raw) {
 }
 
 function cmdGo(dir) {
+  if (G.combat) {
+    print("You can't walk away mid-encounter. The " + G.combat.name + " would take that personally.", "error");
+    print("FIGHT  |  OUTWIT  |  FLEE", "system");
+    return;
+  }
   dir = dir.trim().toLowerCase();
   var dirMap = { "n": "north", "s": "south", "e": "east", "w": "west" };
   if (dirMap[dir]) dir = dirMap[dir];
@@ -1030,6 +1041,21 @@ function cmdGo(dir) {
     G.flags.dragon_talked = true;
     setHint("TALK TO DRAGON or SHOW LETTER to the dragon.");
   }
+
+  // Mayor: spots the seal automatically if you're carrying it
+  if (dest === "mudwick_gate" && G.flags.has_seal && !G.flags.mayor_signed) {
+    print("", "divider");
+    print("The Mayor's eyes go immediately to the seal. His chain of office makes a small sound of relief.", "normal");
+    print("\"That's— yes. That's my seal.\" He produces a stamp from somewhere inside his robes. \"Allow me to make this official.\"", "normal");
+    print("He stamps your delivery form with considerable ceremony.", "normal");
+    print("\"Authorised. Filed. You may proceed to Number One, Cobble End. Knock twice. Wait.\"", "normal");
+    G.flags.mayor_signed = true;
+    addScore(15);
+    setHint("Head into the village (NORTH), then WEST to Cobble End. DELIVER LETTER.");
+  }
+
+  // Wandering goblin check
+  checkWanderingGoblin();
 }
 
 function cmdLook(target) {
@@ -1451,14 +1477,286 @@ function cmdHelp() {
   print("ITEMS:     TAKE [item]  |  DROP [item]  |  INVENTORY (or I)", "system");
   print("PEOPLE:    TALK TO [person]  |  GIVE [item] TO [person]  |  SHOW [item] TO [person]", "system");
   print("ACTIONS:   USE [item]  |  EAT [item]  |  DRINK [item]  |  KNOCK  |  DELIVER LETTER", "system");
-  print("PUZZLE:    RIDDLE  |  ANSWER [word]  |  STAMP", "system");
+  print("COMBAT:    FIGHT  |  OUTWIT  |  FLEE  (when a goblin appears)", "system");
   print("SYSTEM:    SAVE  |  LOAD  |  SCORE  |  WAIT  |  HELP", "system");
   print("", "divider");
 }
 
 // ════════════════════════════════════════════════════════
-//  SKILL CHECK SYSTEM
+//  COMBAT SYSTEM
 // ════════════════════════════════════════════════════════
+
+var GOBLINS = [
+  {
+    id: "goblin_postman",
+    name: "a Disgruntled Former Postman",
+    intro: "A figure lurches from behind a bush. He is wearing the remnants of a postal uniform — or possibly a postal uniform is wearing the remnants of him. His badge reads: FORMERLY GERALD. He has a grievance and a large stick.",
+    hp: 8, maxHp: 8, nerve: 2,
+    attacks: [
+      "swings his official stick with bureaucratic fury",
+      "attempts to stamp you with an expired VIOLATION notice",
+      "hurls a handful of undelivered mail at your face",
+      "reads out a formal complaint at considerable volume"
+    ],
+    outwits: [
+      "You mention that his pension was filed incorrectly and he is technically still employed. He stops mid-swing, deeply confused.",
+      "You produce the official delivery form. He squints at it. \"That's... that's Form 27-B.\" He lowers his stick. \"Filed in triplicate?\" You nod. He steps aside, muttering."
+    ],
+    loot: { item: "rubber_stamp", name: "a spare rubber stamp", chance: 0.5 },
+    deathMsg: "Gerald sits down heavily in the road. \"I just wanted acknowledgement,\" he says. \"Of my years of service.\" He is fine. He is just sitting.",
+    xp: 8
+  },
+  {
+    id: "goblin_taxman",
+    name: "a Revenue Goblin",
+    intro: "A small green creature in an ill-fitting waistcoat materialises on the path. It is carrying a clipboard and wearing the expression of something that has found its purpose and finds it deeply satisfying. 'TOLL,' it announces. 'Everything is a toll. Existence is a toll. This path has a toll. The toll for not paying the toll is also a toll.'",
+    hp: 6, maxHp: 6, nerve: 2,
+    attacks: [
+      "attempts to fine you for Unlicensed Travelling",
+      "raises a small but surprisingly heavy ledger",
+      "issues a formal notice of grievance directly to your shin",
+      "assesses you for Incidental Inconvenience Tax"
+    ],
+    outwits: [
+      "You tell it that you represent the Omnipotent Postal Consortium, which predates the concept of taxation. It checks its clipboard. This takes a while. It leaves.",
+      "You ask to see its licence. It produces one. You point out it expired in 1987. It stares at this for a long moment, then walks away very quickly."
+    ],
+    loot: { item: "potion", name: "a confiscated restorative tincture", chance: 0.6 },
+    deathMsg: "The Revenue Goblin files a final complaint and dissipates. The complaint will arrive eventually. For certain values of eventually.",
+    xp: 6
+  },
+  {
+    id: "goblin_confused",
+    name: "a Philosophically Confused Goblin",
+    intro: "A goblin sits in the middle of the path, staring at its hands. It looks up. 'Are YOU real?' it asks. Then it attacks you anyway, on the grounds that the question is moot if you're both here.",
+    hp: 7, maxHp: 7, nerve: 1,
+    attacks: [
+      "bites you while questioning the nature of pain",
+      "hits you with a rock, then apologises to the rock",
+      "tackles you with the energy of something that has nothing to lose",
+      "throws mud and wonders aloud if mud has feelings"
+    ],
+    outwits: [
+      "You ask whether it truly exists. It stops attacking to think about this. It is still thinking when you walk away.",
+      "You mention the mushroom near the forest. The goblin's eyes go wide. 'The mushroom SPEAKS?' It runs toward the forest immediately."
+    ],
+    loot: { item: "raven_feather", name: "a suspiciously shiny feather it was hoarding", chance: 0.4 },
+    deathMsg: "The goblin lies down. 'Perhaps,' it says, 'this was always going to happen.' It seems oddly at peace.",
+    xp: 7
+  },
+  {
+    id: "goblin_bureaucrat",
+    name: "a Goblin Bureaucrat",
+    intro: "This goblin is wearing three hats, which is one more than is reasonable and two more than is practical. It holds up a hand. 'This path requires a Form 19-C, a countersignature from the relevant authority, and proof of intention.' Then it draws a small sword.",
+    hp: 9, maxHp: 9, nerve: 3,
+    attacks: [
+      "demands your papers and then hits you with them",
+      "files a Motion to Strike, then strikes",
+      "reads aloud from a lengthy terms-and-conditions document while attacking",
+      "lodges a formal complaint directly against your ribs"
+    ],
+    outwits: [
+      "You produce the rubber stamp and stamp everything on its clipboard twice. It becomes overwhelmed by a feeling of profound completion and sits down.",
+      "You ask which department it reports to. It names four departments. You point out they were all dissolved in the restructuring of 1834. It staggers and retreats."
+    ],
+    loot: { item: "delivery_form", name: "a blank Form 19-C (useless but official-looking)", chance: 0.7 },
+    deathMsg: "The goblin bureaucrat falls, scattering papers everywhere. It reaches out a hand. 'At least,' it whispers, 'file me... correctly.' You probably won't.",
+    xp: 9
+  }
+];
+
+// Rooms where goblins may wander
+var GOBLIN_ZONES = ["kings_road", "bridge_approach", "uncertain_forest", "wizards_clearing", "far_bank", "mill_road"];
+var GOBLIN_CHANCE = 0.30; // 30% chance per move in a goblin zone
+
+function checkWanderingGoblin() {
+  if (G.combat) return;                          // already in combat
+  if (GOBLIN_ZONES.indexOf(G.location) === -1) return;
+  if (G.flags.delivery_complete) return;
+  if (Math.random() > GOBLIN_CHANCE) return;
+
+  // Pick a random goblin type
+  var goblinTemplate = GOBLINS[Math.floor(Math.random() * GOBLINS.length)];
+
+  // Clone it so HP is fresh each encounter
+  G.combat = {
+    id: goblinTemplate.id,
+    name: goblinTemplate.name,
+    hp: goblinTemplate.hp,
+    maxHp: goblinTemplate.maxHp,
+    nerve: goblinTemplate.nerve,
+    attacks: goblinTemplate.attacks,
+    outwits: goblinTemplate.outwits,
+    loot: goblinTemplate.loot,
+    deathMsg: goblinTemplate.deathMsg,
+    xp: goblinTemplate.xp
+  };
+
+  print("", "divider");
+  print("⚠ ENCOUNTER!", "combat");
+  print(goblinTemplate.intro, "normal");
+  print("", "normal");
+  print(G.combat.name + "  ·  Stamina: " + G.combat.hp + "/" + G.combat.maxHp, "combat");
+  print("", "normal");
+  print("What do you do?  FIGHT  |  OUTWIT  |  FLEE", "system");
+  setHint("FIGHT (NERVE check, deal damage), OUTWIT (CUNNING check, end combat cleverly), or FLEE (NERVE check, escape at a cost).");
+  updateCombatStats();
+}
+
+function updateCombatStats() {
+  if (G.combat) {
+    document.getElementById("s-letter").textContent = "⚔ " + G.combat.name;
+    document.getElementById("s-letter").style.color = "var(--red-light)";
+  } else {
+    document.getElementById("s-letter").textContent = G.flags.delivery_complete ? "DELIVERED" : "Undelivered";
+    document.getElementById("s-letter").style.color = G.flags.delivery_complete ? "var(--green)" : "";
+  }
+}
+
+function cmdFight() {
+  if (!G.combat) {
+    print("There is nothing here to fight. The road is peaceful. This is, arguably, worse.", "system");
+    return;
+  }
+  var enemy = G.combat;
+  skillCheck(
+    "FIGHT — " + enemy.name,
+    "You square up. The " + enemy.name + " raises its weapon. One of you is going to regret this. Probably both.",
+    "NERVE", 10,
+    function(success) {
+      if (success) {
+        var dmgDealt = Math.ceil(Math.random() * 4) + 2;
+        enemy.hp -= dmgDealt;
+        print("You land a solid blow! The " + enemy.name + " takes " + dmgDealt + " damage. (Remaining: " + Math.max(0, enemy.hp) + "/" + enemy.maxHp + ")", "success");
+        var attackLines = [
+          "It staggers but does not fall.",
+          "It looks annoyed, which is worse than it looking angry.",
+          "It shakes its head and redoubles its efforts.",
+          "It makes a sound of professional displeasure."
+        ];
+        if (enemy.hp > 0) {
+          enemyCounterAttack();
+        } else {
+          combatVictory();
+        }
+      } else {
+        print("Your attack goes wide. The " + enemy.name + " looks almost sympathetic.", "error");
+        enemyCounterAttack();
+      }
+    }
+  );
+}
+
+function enemyCounterAttack() {
+  var enemy = G.combat;
+  if (!enemy) return;
+  var dmg = Math.ceil(Math.random() * 3) + 1;
+  G.hp = Math.max(0, G.hp - dmg);
+  var attack = enemy.attacks[Math.floor(Math.random() * enemy.attacks.length)];
+  print("The " + enemy.name + " " + attack + ". You take " + dmg + " stamina damage.", "combat");
+  updateStats();
+  if (G.hp <= 0) {
+    combatDefeat();
+  } else {
+    print("Your stamina: " + G.hp + "/" + G.maxHp + "  ·  " + enemy.name + ": " + Math.max(0,enemy.hp) + "/" + enemy.maxHp, "system");
+    print("FIGHT  |  OUTWIT  |  FLEE", "system");
+  }
+}
+
+function cmdOutwit() {
+  if (!G.combat) {
+    print("There is no one here to outwit. You are, however, welcome to try outwitting yourself. Most people do.", "system");
+    return;
+  }
+  var enemy = G.combat;
+  skillCheck(
+    "OUTWIT — " + enemy.name,
+    "You decide that brawn is overrated and attempt to resolve this situation with wit, misdirection, or sheer bureaucratic authority.",
+    "CUNNING", 11,
+    function(success) {
+      if (success) {
+        var line = enemy.outwits[Math.floor(Math.random() * enemy.outwits.length)];
+        print(line, "success");
+        combatVictory(true);
+      } else {
+        print("Your clever remark lands with the impact of a damp invoice. The " + enemy.name + " is unimpressed.", "error");
+        enemyCounterAttack();
+      }
+    }
+  );
+}
+
+function cmdFlee() {
+  if (!G.combat) {
+    print("There is nothing to flee from. Running away from nothing is called a walk.", "system");
+    return;
+  }
+  var enemy = G.combat;
+  skillCheck(
+    "FLEE — " + enemy.name,
+    "You decide that discretion is the better part of valour, and valour is frankly overpriced.",
+    "NERVE", 9,
+    function(success) {
+      if (success) {
+        var dmg = Math.ceil(Math.random() * 2);
+        G.hp = Math.max(1, G.hp - dmg);
+        G.combat = null;
+        print("You make an undignified but effective exit, taking " + dmg + " damage on the way out.", "system");
+        print("The " + enemy.name + " shouts something after you. It is probably a fine.", "normal");
+        updateStats();
+        updateCombatStats();
+        setHint("You escaped. The goblin may or may not still be around. Be cautious.");
+      } else {
+        print("You trip over your own mail bag. The " + enemy.name + " catches up.", "error");
+        enemyCounterAttack();
+      }
+    }
+  );
+}
+
+function combatVictory(outwitted) {
+  var enemy = G.combat;
+  print("", "divider");
+  if (outwitted) {
+    print("✦ OUTWITTED! ✦", "success");
+  } else {
+    print("✦ VICTORY! ✦", "success");
+  }
+  print(enemy.deathMsg, "normal");
+  addScore(enemy.xp);
+  print("Score +" + enemy.xp, "loot");
+
+  // Loot drop
+  if (enemy.loot && Math.random() < enemy.loot.chance && !hasItem(enemy.loot.item)) {
+    addToInventory(enemy.loot.item);
+    print("You find: <b>" + enemy.loot.name + "</b>.", "loot");
+  } else {
+    // Always drop a small coin reward flavour
+    print("You find nothing of value on its person. This is consistent with its general outlook.", "system");
+  }
+
+  G.combat = null;
+  updateStats();
+  updateCombatStats();
+  setHint("Combat over. Type LOOK to get your bearings.");
+}
+
+function combatDefeat() {
+  var enemyName = G.combat ? G.combat.name : "creature";
+  G.combat = null;
+  print("", "divider");
+  print("✦ DEFEATED ✦", "combat");
+  print("You crumple. The world goes briefly dark.", "combat");
+  print("When you come to, the " + enemyName + " is gone. Your mail bag is intact — even petty criminals respect the post, apparently.", "normal");
+  print("A passing farmer drags you to the roadside and leaves you with some water and an opinion about your career choices.", "normal");
+  G.hp = Math.ceil(G.maxHp * 0.3);
+  print("You recover with " + G.hp + " stamina. Find something to eat or drink before pressing on.", "system");
+  updateStats();
+  updateCombatStats();
+  setHint("You were defeated. Find food or a tincture to restore stamina before the next encounter.");
+}
+
+
 
 function skillCheck(title, context, stat, target, callback) {
   diceCallback = null;
@@ -1655,7 +1953,8 @@ function saveGame() {
       hp: G.hp, maxHp: G.maxHp, cunning: G.cunning, nerve: G.nerve,
       inventory: G.inventory.slice(),
       location: G.location, moves: G.moves, score: G.score,
-      flags: JSON.parse(JSON.stringify(G.flags))
+      flags: JSON.parse(JSON.stringify(G.flags)),
+      combat: G.combat ? JSON.parse(JSON.stringify(G.combat)) : null
     };
     // Save room item states
     var roomItems = {};
@@ -1675,7 +1974,8 @@ function autoSave() {
       hp: G.hp, maxHp: G.maxHp, cunning: G.cunning, nerve: G.nerve,
       inventory: G.inventory.slice(),
       location: G.location, moves: G.moves, score: G.score,
-      flags: JSON.parse(JSON.stringify(G.flags))
+      flags: JSON.parse(JSON.stringify(G.flags)),
+      combat: G.combat ? JSON.parse(JSON.stringify(G.combat)) : null
     };
     var roomItems = {};
     for (var k in ROOMS) { roomItems[k] = (ROOMS[k].items || []).slice(); }
@@ -1697,6 +1997,7 @@ function loadGame(fromTitle) {
     G.inventory = data.inventory;
     G.location = data.location; G.moves = data.moves; G.score = data.score;
     G.flags = data.flags;
+    G.combat = data.combat || null;
     if (data.roomItems) {
       for (var k in data.roomItems) {
         if (ROOMS[k]) ROOMS[k].items = data.roomItems[k];
