@@ -238,8 +238,8 @@
     justify-content: center;
     font-size: 26px;
     font-family: 'Special Elite', serif;
-    color: var(--paper);
-    background: var(--bg);
+    color: #1a1008;
+    background: #ffffff;
     border: 2px solid var(--gold);
     clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
   }
@@ -262,6 +262,19 @@
   #dice-result-line .outcome-win  { color: var(--green);     font-family: 'Special Elite', serif; font-size: 15px; }
   #dice-result-line .outcome-loss { color: var(--red-light); font-family: 'Special Elite', serif; font-size: 15px; }
 
+  #dice-roll-btn {
+    background: var(--gold);
+    color: var(--bg);
+    border: none;
+    padding: 10px 28px;
+    font-family: 'Special Elite', serif;
+    font-size: 14px;
+    letter-spacing: 1px;
+    cursor: pointer;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+  }
+  #dice-roll-btn:hover { background: var(--paper); }
   #dice-continue-btn {
     background: var(--red);
     color: var(--paper);
@@ -422,6 +435,7 @@
       <div class="die"><div class="die-inner"><div class="die-face" id="die2">?</div></div></div>
     </div>
     <div id="dice-result-line"></div>
+    <button id="dice-roll-btn" onclick="diceRoll()">Roll the Dice</button>
     <button id="dice-continue-btn" onclick="diceContinue()">Continue</button>
   </div>
 </div>
@@ -1456,50 +1470,64 @@ function skillCheck(title, context, stat, target, callback) {
   document.getElementById("dice-context").textContent = context + "\n\nRolling 2d10 + " + stat + " (" + statVal + ") vs Target " + target;
   document.getElementById("dice-result-line").innerHTML = "";
   document.getElementById("dice-continue-btn").style.display = "none";
+  document.getElementById("dice-roll-btn").style.display = "inline-block";
   document.getElementById("die1").textContent = "?";
   document.getElementById("die2").textContent = "?";
   document.getElementById("die1").classList.remove("rolling");
   document.getElementById("die2").classList.remove("rolling");
 
+  // Store roll params for when the button is pressed
+  el.dataset.stat = stat;
+  el.dataset.statVal = statVal;
+  el.dataset.target = target;
+
   el.classList.add("active");
 
-  setTimeout(function() {
-    document.getElementById("die1").classList.add("rolling");
-    document.getElementById("die2").classList.add("rolling");
+  diceCallback = function(success) { callback(success); };
+}
 
-    var r1, r2, interim;
-    var rolls = 0;
-    var maxRolls = 8;
-    var rollInterval = setInterval(function() {
-      document.getElementById("die1").textContent = Math.ceil(Math.random() * 10);
-      document.getElementById("die2").textContent = Math.ceil(Math.random() * 10);
-      rolls++;
-      if (rolls >= maxRolls) {
-        clearInterval(rollInterval);
-        r1 = Math.ceil(Math.random() * 10);
-        r2 = Math.ceil(Math.random() * 10);
-        document.getElementById("die1").textContent = r1;
-        document.getElementById("die2").textContent = r2;
-        document.getElementById("die1").classList.remove("rolling");
-        document.getElementById("die2").classList.remove("rolling");
+function diceRoll() {
+  var el = document.getElementById("dice-overlay");
+  var statVal = parseInt(el.dataset.statVal);
+  var target = parseInt(el.dataset.target);
+  var stat = el.dataset.stat;
 
-        var total = r1 + r2 + statVal;
-        var success = total >= target;
-        var resultEl = document.getElementById("dice-result-line");
+  document.getElementById("dice-roll-btn").style.display = "none";
+  document.getElementById("die1").classList.add("rolling");
+  document.getElementById("die2").classList.add("rolling");
 
-        resultEl.innerHTML =
-          "Rolled: " + r1 + " + " + r2 + " + " + stat + " (" + statVal + ") = <b>" + total + "</b><br>" +
-          "Target: " + target + "<br><br>" +
-          (success
-            ? "<span class=\"outcome-win\">✦ SUCCESS ✦</span>"
-            : "<span class=\"outcome-loss\">✦ FAILURE ✦</span>");
+  var rolls = 0;
+  var maxRolls = 8;
+  var rollInterval = setInterval(function() {
+    document.getElementById("die1").textContent = Math.ceil(Math.random() * 10);
+    document.getElementById("die2").textContent = Math.ceil(Math.random() * 10);
+    rolls++;
+    if (rolls >= maxRolls) {
+      clearInterval(rollInterval);
+      var r1 = Math.ceil(Math.random() * 10);
+      var r2 = Math.ceil(Math.random() * 10);
+      document.getElementById("die1").textContent = r1;
+      document.getElementById("die2").textContent = r2;
+      document.getElementById("die1").classList.remove("rolling");
+      document.getElementById("die2").classList.remove("rolling");
 
-        document.getElementById("dice-continue-btn").style.display = "inline-block";
+      var total = r1 + r2 + statVal;
+      var success = total >= target;
+      var resultEl = document.getElementById("dice-result-line");
 
-        diceCallback = function() { callback(success); };
-      }
-    }, 80);
-  }, 100);
+      resultEl.innerHTML =
+        "Rolled: " + r1 + " + " + r2 + " + " + stat + " (" + statVal + ") = <b>" + total + "</b><br>" +
+        "Target: " + target + "<br><br>" +
+        (success
+          ? "<span class=\"outcome-win\">✦ SUCCESS ✦</span>"
+          : "<span class=\"outcome-loss\">✦ FAILURE ✦</span>");
+
+      document.getElementById("dice-continue-btn").style.display = "inline-block";
+
+      var savedCallback = diceCallback;
+      diceCallback = function() { savedCallback(success); };
+    }
+  }, 80);
 }
 
 function diceContinue() {
