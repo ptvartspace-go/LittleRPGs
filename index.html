@@ -589,8 +589,6 @@ var ROOMS = {
     desc: "A road that used to serve a mill. The mill is still here. The road remembers. A large and SOMEWHAT EMBARRASSED DRAGON sits blocking the path ahead, curled around a pile of coins it clearly finds tedious. It is not dangerous in the traditional sense. It is, however, immovable by ordinary means. NORTH leads to Mudwick. SOUTH returns to the far bank.",
     exits: { "south": "far_bank", "north": "mudwick_gate" },
     items: [],
-    locked: "dragon_locked",
-    lockMsg: "The dragon shifts one enormous eye toward you. \"Official business,\" it says, in a voice like a slow avalanche. \"I'll need to assess the significance of your errand. Leave the item in question on the rock.\" It gestures to a flat stone with a claw. This is, apparently, normal.",
     hint: "TALK TO DRAGON. It's not dangerous — just awkward. Try SHOW LETTER to the dragon."
   },
   "mudwick_gate": {
@@ -599,6 +597,8 @@ var ROOMS = {
     desc: "A gate of weathered wood and managed expectations. A sign above reads: WELCOME TO MUDWICK-UNDER-SORROW. Below it, someone has added: WE UNDERSTAND IF YOU DON'T STAY. The MAYOR stands beneath the gate arch, wearing a chain of office and the expression of a man who has spent thirty years waiting for something to happen and is not entirely pleased that something finally has. NORTH leads into the village. SOUTH returns to the mill road.",
     exits: { "south": "mill_road", "north": "village_square" },
     items: [],
+    locked: "dragon_locked",
+    lockMsg: "The dragon heaves itself upright behind you, blocking the road with the quiet authority of something that has been contractually obligated to do this since 1842. \"I haven't assessed your errand yet,\" it rumbles. \"Return to the road and present the item in question.\"",
     hint: "TALK TO MAYOR. You will need his seal to complete the delivery."
   },
   "village_square": {
@@ -751,17 +751,10 @@ var CHARACTERS = {
       if (!G.flags.dragon_locked) {
         print("\"You may pass,\" rumbles the dragon. \"Your errand was assessed. Marginally significant.\"", "normal");
         print("It sounds almost disappointed.", "normal");
-      } else if (!G.flags.dragon_talked) {
-        G.flags.dragon_talked = true;
-        print("The dragon shifts. The road shudders sympathetically.", "normal");
-        print("\"I guard this road,\" it says, \"by contractual obligation. The contract expired in 1842 but no one has sent the paperwork to dissolve it. I find this fitting.\"", "normal");
-        print("It gestures with one claw.", "normal");
-        print("\"I assess the significance of all deliveries. Place the item on the assessment stone. I will determine if it merits passage.\"", "normal");
-        print("A pause.", "normal");
-        print("\"Most things do not. I am professionally thorough.\"", "normal");
-        setHint("SHOW LETTER to the dragon. Or GIVE LETTER to the dragon (don't worry, you'll get it back).");
       } else {
-        print("The dragon eyes you. \"Are you going to show me the item or not? I have a reputation for thoroughness to maintain.\"", "normal");
+        print("\"I guard this road by contractual obligation,\" the dragon says. \"The contract expired in 1842. No one has filed the paperwork to dissolve it. I find this fitting.\"", "normal");
+        print("\"Show me the item. I will assess whether your errand merits passage.\"", "normal");
+        setHint("SHOW LETTER to the dragon.");
       }
     },
     show: function(item) {
@@ -1007,7 +1000,7 @@ function cmdGo(dir) {
   var dest = room.exits[dir];
   var destRoom = ROOMS[dest];
 
-  // Check locks
+  // Bridge blocks entry (warden stops you before you cross)
   if (destRoom.locked && G.flags[destRoom.locked]) {
     print(destRoom.lockMsg, "normal");
     return;
@@ -1015,6 +1008,14 @@ function cmdGo(dir) {
 
   G.location = dest;
   describeRoom(true);
+
+  // Dragon: you enter mill_road fine; dragon introduces itself on first visit
+  if (dest === "mill_road" && !G.flags.dragon_talked && G.flags.dragon_locked) {
+    print("", "divider");
+    print("The dragon shifts one enormous eye toward you. \"Official business,\" it says, in a voice like a slow avalanche. \"I'll need to assess the significance of your errand. Leave the item in question on the rock.\" It gestures to a flat stone with a claw. This is, apparently, normal.", "normal");
+    G.flags.dragon_talked = true;
+    setHint("TALK TO DRAGON or SHOW LETTER to the dragon.");
+  }
 }
 
 function cmdLook(target) {
