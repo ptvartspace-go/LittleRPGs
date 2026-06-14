@@ -3,2496 +3,331 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>The Very Last Witch Finder</title>
+<title>The Little RPG Archive</title>
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=Special+Elite&family=Share+Tech+Mono&display=swap');
+  @import url('https://fonts.googleapis.com/css2?family=Special+Elite&family=Crimson+Text:ital,wght@0,400;0,600;1,400&display=swap');
 
   :root {
-    --bg:        #110e1c;
-    --bg2:       #1c1730;
-    --paper:     #d8d0ec;
-    --paper-dim: #8d80b0;
-    --red:       #c0556a;
-    --red-light: #d97a8e;
-    --green:     #6fbf8f;
-    --gold:      #ad7fe6;
-    --border:    #322750;
-    --input-bg:  #0a0814;
+    --bg:        #1b1712;
+    --bg2:       #25201a;
+    --paper:     #ede4d3;
+    --paper-dim: #a89a83;
+    --brass:     #c9a24a;
+    --border:    #3c3327;
+    --shadow:    rgba(0,0,0,0.45);
   }
 
   * { box-sizing: border-box; margin: 0; padding: 0; }
 
-  body {
+  html, body {
     background: var(--bg);
     color: var(--paper);
-    font-family: 'Share Tech Mono', 'Courier New', monospace;
-    font-size: 14px;
-    height: 100vh;
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
+    font-family: 'Crimson Text', Georgia, serif;
+    min-height: 100%;
+  }
+
+  body {
+    background-image:
+      radial-gradient(circle at 15% 10%, rgba(201,162,74,0.06), transparent 40%),
+      radial-gradient(circle at 85% 90%, rgba(201,162,74,0.05), transparent 40%);
   }
 
   /* ── HEADER ── */
-  #header {
-    background: var(--bg2);
-    border-bottom: 2px solid var(--border);
-    padding: 8px 16px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    flex-shrink: 0;
-  }
-  #header h1 {
-    font-family: 'Special Elite', serif;
-    font-size: 16px;
-    color: var(--gold);
-    letter-spacing: 2px;
-    text-transform: uppercase;
-  }
-  #header .subtitle {
-    font-size: 11px;
-    color: var(--paper-dim);
-    letter-spacing: 1px;
-  }
-
-  /* ── MAIN LAYOUT ── */
-  #main {
-    display: flex;
-    flex: 1;
-    overflow: hidden;
-    gap: 0;
-  }
-
-  /* ── NARRATIVE PANE ── */
-  #narrative-pane {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    border-right: 2px solid var(--border);
-    overflow: hidden;
-  }
-
-  #output {
-    flex: 1;
-    overflow-y: auto;
-    padding: 16px;
-    line-height: 1.7;
-    scroll-behavior: smooth;
-  }
-  #output::-webkit-scrollbar { width: 6px; }
-  #output::-webkit-scrollbar-track { background: var(--bg); }
-  #output::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
-
-  .msg { margin-bottom: 10px; }
-  .msg-normal  { color: var(--paper); }
-  .msg-system  { color: var(--paper-dim); font-style: italic; }
-  .msg-error   { color: var(--red-light); }
-  .msg-success { color: var(--green); }
-  .msg-combat  { color: var(--red-light); }
-  .msg-loot    { color: var(--gold); }
-  .msg-title   { color: var(--gold); font-family: 'Special Elite', serif; font-size: 16px; letter-spacing: 1px; }
-  .msg-divider { color: var(--border); user-select: none; }
-  .msg-input-echo { color: var(--paper-dim); }
-  .msg-location { color: var(--gold); font-family: 'Special Elite', serif; }
-
-  /* ── INPUT BAR ── */
-  #input-bar {
-    display: flex;
-    align-items: center;
-    border-top: 2px solid var(--border);
-    background: var(--input-bg);
-    padding: 8px 12px;
-    gap: 8px;
-    flex-shrink: 0;
-  }
-  #input-bar .prompt { color: var(--gold); font-size: 16px; }
-  #cmd-input {
-    flex: 1;
-    background: transparent;
-    border: none;
-    outline: none;
-    color: var(--paper);
-    font-family: 'Share Tech Mono', monospace;
-    font-size: 14px;
-    caret-color: var(--gold);
-  }
-  #cmd-input::placeholder { color: var(--paper-dim); opacity: 0.5; }
-
-  /* ── STATS PANE ── */
-  #stats-pane {
-    width: 220px;
-    flex-shrink: 0;
-    display: flex;
-    flex-direction: column;
-    overflow-y: auto;
-    padding: 14px 12px;
-    gap: 14px;
-    background: var(--bg2);
-  }
-  #stats-pane::-webkit-scrollbar { width: 4px; }
-  #stats-pane::-webkit-scrollbar-thumb { background: var(--border); }
-
-  .stat-block { border: 1px solid var(--border); padding: 10px; }
-  .stat-block h3 {
-    font-family: 'Special Elite', serif;
-    color: var(--gold);
-    font-size: 11px;
-    letter-spacing: 2px;
-    text-transform: uppercase;
-    margin-bottom: 8px;
-    border-bottom: 1px solid var(--border);
-    padding-bottom: 4px;
-  }
-  .stat-row {
-    display: flex;
-    justify-content: space-between;
-    margin: 4px 0;
-    font-size: 12px;
-  }
-  .stat-label { color: var(--paper-dim); }
-  .stat-val { color: var(--paper); }
-  .stat-val.hp-ok  { color: var(--green); }
-  .stat-val.hp-low { color: var(--gold); }
-  .stat-val.hp-crit{ color: var(--red-light); }
-
-  .inv-item {
-    font-size: 12px;
-    color: var(--paper);
-    padding: 2px 0;
-    border-bottom: 1px dotted var(--border);
-  }
-  .inv-empty { color: var(--paper-dim); font-style: italic; font-size: 12px; }
-
-  /* ── HINT BLOCK ── */
-  #hint-block {
-    font-size: 11px;
-    color: var(--paper-dim);
-    line-height: 1.6;
-    border: 1px dashed var(--border);
-    padding: 8px;
-  }
-  #hint-block b { color: var(--paper); }
-
-  /* ── DICE MODAL ── */
-  #dice-overlay {
-    display: none;
-    position: fixed;
-    inset: 0;
-    background: rgba(0,0,0,0.85);
-    z-index: 100;
-    align-items: center;
-    justify-content: center;
-    flex-direction: column;
-    gap: 20px;
-  }
-  #dice-overlay.active { display: flex; }
-
-  #dice-modal {
-    background: var(--bg2);
-    border: 2px solid var(--gold);
-    padding: 30px 40px;
+  header {
+    max-width: 760px;
+    margin: 0 auto;
+    padding: 64px 24px 32px;
     text-align: center;
-    min-width: 340px;
-    max-width: 420px;
-  }
-  #dice-modal h2 {
-    font-family: 'Special Elite', serif;
-    color: var(--gold);
-    font-size: 18px;
-    letter-spacing: 2px;
-    margin-bottom: 6px;
-  }
-  #dice-context {
-    color: var(--paper-dim);
-    font-size: 12px;
-    margin-bottom: 20px;
-    line-height: 1.5;
-    white-space: pre-line;
   }
 
-  .dice-row {
-    display: flex;
-    justify-content: center;
-    gap: 24px;
-    margin-bottom: 20px;
-  }
-
-  /* D10 die face */
-  .die {
-    width: 64px;
-    height: 64px;
-    position: relative;
-    perspective: 200px;
-  }
-  .die-inner {
-    width: 100%;
-    height: 100%;
-    position: relative;
-    transform-style: preserve-3d;
-  }
-  .die-face {
-    position: absolute;
-    inset: 0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 26px;
-    font-family: 'Special Elite', serif;
-    color: #1a1008;
-    background: #ffffff;
-    border: 2px solid var(--gold);
-    clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
-  }
-  .die-face.rolling { animation: roll 0.6s ease-out forwards; }
-  @keyframes roll {
-    0%   { transform: rotateX(0deg)   rotateY(0deg)   rotateZ(0deg); }
-    25%  { transform: rotateX(180deg) rotateY(90deg)  rotateZ(45deg); }
-    50%  { transform: rotateX(360deg) rotateY(180deg) rotateZ(90deg); }
-    75%  { transform: rotateX(270deg) rotateY(270deg) rotateZ(135deg); }
-    100% { transform: rotateX(360deg) rotateY(360deg) rotateZ(180deg); }
-  }
-
-  #dice-result-line {
-    font-size: 13px;
-    color: var(--paper);
-    min-height: 44px;
-    line-height: 1.6;
-    margin-bottom: 16px;
-  }
-  #dice-result-line .outcome-win  { color: var(--green);     font-family: 'Special Elite', serif; font-size: 15px; }
-  #dice-result-line .outcome-loss { color: var(--red-light); font-family: 'Special Elite', serif; font-size: 15px; }
-
-  #dice-roll-btn {
-    background: var(--gold);
-    color: var(--bg);
-    border: none;
-    padding: 10px 28px;
-    font-family: 'Special Elite', serif;
-    font-size: 14px;
-    letter-spacing: 1px;
-    cursor: pointer;
-    text-transform: uppercase;
-    margin-bottom: 8px;
-  }
-  #dice-roll-btn:hover { background: var(--paper); }
-
-  #dice-continue-btn {
-    background: var(--red);
-    color: var(--paper);
-    border: none;
-    padding: 10px 28px;
-    font-family: 'Special Elite', serif;
-    font-size: 14px;
-    letter-spacing: 1px;
-    cursor: pointer;
-    text-transform: uppercase;
-    display: none;
-  }
-  #dice-continue-btn:hover { background: var(--red-light); }
-
-  /* ── SAVE TOAST ── */
-  #save-toast {
-    position: fixed;
-    bottom: 60px;
-    left: 50%;
-    transform: translateX(-50%);
-    background: var(--bg2);
-    border: 1px solid var(--gold);
-    color: var(--gold);
-    padding: 8px 20px;
-    font-size: 12px;
-    letter-spacing: 1px;
-    opacity: 0;
-    transition: opacity 0.3s;
-    pointer-events: none;
-    z-index: 200;
-  }
-  #save-toast.show { opacity: 1; }
-
-  /* ── TITLE / CHARACTER SELECT SCREEN ── */
-  #title-screen {
-    position: fixed;
-    inset: 0;
-    background: var(--bg);
-    z-index: 300;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 16px;
-    padding: 24px;
-    text-align: center;
-    overflow-y: auto;
-  }
-  #title-screen .big-title {
-    font-family: 'Special Elite', serif;
-    font-size: clamp(22px, 4vw, 38px);
-    color: var(--gold);
+  .drawer-label {
+    display: inline-block;
+    font-family: 'Special Elite', monospace;
+    font-size: 11px;
     letter-spacing: 4px;
     text-transform: uppercase;
-    line-height: 1.3;
-  }
-  #title-screen .big-sub {
-    font-size: 13px;
     color: var(--paper-dim);
-    letter-spacing: 2px;
-    max-width: 480px;
-    line-height: 1.8;
+    border: 1px solid var(--border);
+    border-radius: 2px;
+    padding: 5px 14px;
+    margin-bottom: 22px;
+    position: relative;
   }
-  #title-screen .seal {
-    font-size: 60px;
-    margin: 8px 0;
-    animation: sealPulse 3s ease-in-out infinite;
+  .drawer-label::before, .drawer-label::after {
+    content: "•";
+    color: var(--brass);
+    margin: 0 8px;
   }
-  @keyframes sealPulse {
-    0%, 100% { opacity: 0.7; transform: scale(1); }
-    50%       { opacity: 1;   transform: scale(1.05); }
-  }
-  .title-btn {
-    background: none;
-    border: 2px solid var(--gold);
-    color: var(--gold);
-    font-family: 'Special Elite', serif;
-    font-size: 14px;
-    letter-spacing: 2px;
-    padding: 10px 28px;
-    cursor: pointer;
-    text-transform: uppercase;
-    margin: 4px;
-    transition: background 0.2s, color 0.2s;
-  }
-  .title-btn:hover { background: var(--gold); color: var(--bg); }
 
-  /* Character select cards */
-  #char-select {
-    display: none;
-    flex-direction: column;
-    align-items: center;
-    gap: 16px;
-    width: 100%;
-  }
-  .char-cards {
-    display: flex;
-    gap: 16px;
-    flex-wrap: wrap;
-    justify-content: center;
-    max-width: 700px;
-  }
-  .char-card {
-    border: 2px solid var(--border);
-    background: var(--bg2);
-    padding: 18px;
-    width: 280px;
-    text-align: left;
-    cursor: pointer;
-    transition: border-color 0.2s, transform 0.15s;
-  }
-  .char-card:hover {
-    border-color: var(--gold);
-    transform: translateY(-3px);
-  }
-  .char-card h3 {
-    font-family: 'Special Elite', serif;
-    color: var(--gold);
-    font-size: 16px;
-    letter-spacing: 1px;
-    margin-bottom: 4px;
-  }
-  .char-card .char-role {
-    font-size: 11px;
-    color: var(--paper-dim);
-    letter-spacing: 1px;
-    margin-bottom: 10px;
+  h1 {
+    font-family: 'Special Elite', monospace;
+    font-size: clamp(28px, 6vw, 46px);
+    letter-spacing: 3px;
     text-transform: uppercase;
-  }
-  .char-card p {
-    font-size: 12px;
-    line-height: 1.6;
     color: var(--paper);
-    margin-bottom: 10px;
+    line-height: 1.35;
   }
-  .char-stats {
-    display: flex;
-    gap: 14px;
-    font-size: 11px;
-    color: var(--paper-dim);
-    border-top: 1px dashed var(--border);
-    padding-top: 8px;
-    margin-top: 4px;
+  h1 .cursor {
+    display: inline-block;
+    width: 0.5em;
+    background: var(--brass);
+    animation: blink 1.1s step-end infinite;
+    margin-left: 2px;
+    height: 0.9em;
+    vertical-align: -0.1em;
   }
-  .char-stats b { color: var(--gold); }
+  @keyframes blink { 50% { opacity: 0; } }
 
-  #game-container { display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
+  header p.tagline {
+    margin-top: 18px;
+    font-size: 18px;
+    font-style: italic;
+    color: var(--paper-dim);
+    line-height: 1.7;
+  }
+
+  header .filed {
+    margin-top: 14px;
+    font-family: 'Special Elite', monospace;
+    font-size: 11px;
+    letter-spacing: 2px;
+    color: var(--brass);
+    text-transform: uppercase;
+  }
+
+  /* ── CATALOG GRID ── */
+  main {
+    max-width: 920px;
+    margin: 0 auto;
+    padding: 24px 24px 80px;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 28px;
+  }
+
+  /* ── CARD (index-card / case-file styling) ── */
+  .card {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    box-shadow: 0 6px 18px var(--shadow);
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    text-decoration: none;
+    color: var(--paper);
+    transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
+    overflow: hidden;
+  }
+  .card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 12px 28px var(--shadow);
+    border-color: var(--card-accent, var(--brass));
+  }
+  .card:focus-visible {
+    outline: 2px solid var(--card-accent, var(--brass));
+    outline-offset: 3px;
+  }
+
+  /* coloured "tab" along the top, like a folder tab */
+  .card .tab {
+    height: 6px;
+    width: 100%;
+    background: var(--card-accent, var(--brass));
+  }
+
+  .card .card-body {
+    padding: 22px 24px 20px;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .card .seal {
+    font-size: 30px;
+    margin-bottom: 10px;
+    filter: drop-shadow(0 2px 4px var(--shadow));
+  }
+
+  .card h2 {
+    font-family: 'Special Elite', monospace;
+    font-size: 18px;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    margin-bottom: 6px;
+    color: var(--paper);
+  }
+
+  .card .file-no {
+    font-family: 'Special Elite', monospace;
+    font-size: 10px;
+    letter-spacing: 2px;
+    color: var(--paper-dim);
+    text-transform: uppercase;
+    margin-bottom: 14px;
+  }
+
+  .card .file-no .dot { color: var(--card-accent, var(--brass)); }
+
+  .card p.desc {
+    font-size: 15px;
+    line-height: 1.65;
+    color: var(--paper);
+    flex: 1;
+  }
+
+  .card .meta {
+    margin-top: 16px;
+    padding-top: 12px;
+    border-top: 1px dashed var(--border);
+    font-size: 12px;
+    color: var(--paper-dim);
+    font-style: italic;
+  }
+
+  .card .play-row {
+    margin-top: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-family: 'Special Elite', monospace;
+    font-size: 12px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--card-accent, var(--brass));
+  }
+  .card .play-row .arrow {
+    transition: transform 0.18s ease;
+  }
+  .card:hover .play-row .arrow {
+    transform: translateX(4px);
+  }
+
+  /* ── PLACEHOLDER CARD (more to come) ── */
+  .card.placeholder {
+    border-style: dashed;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    cursor: default;
+  }
+  .card.placeholder:hover {
+    transform: none;
+    box-shadow: 0 6px 18px var(--shadow);
+    border-color: var(--border);
+  }
+  .card.placeholder .card-body {
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    color: var(--paper-dim);
+  }
+  .card.placeholder .seal { font-size: 22px; opacity: 0.5; }
+  .card.placeholder h2 { color: var(--paper-dim); font-size: 14px; }
+  .card.placeholder p.desc { font-style: italic; font-size: 13px; }
+
+  /* ── FOOTER ── */
+  footer {
+    max-width: 760px;
+    margin: 0 auto;
+    padding: 0 24px 60px;
+    text-align: center;
+    font-size: 12px;
+    color: var(--paper-dim);
+    font-family: 'Special Elite', monospace;
+    letter-spacing: 1.5px;
+  }
 </style>
 </head>
 <body>
 
-<!-- TITLE / CHARACTER SELECT SCREEN -->
-<div id="title-screen">
+<header>
+  <div class="drawer-label">Field Archive — Drawer 1</div>
+  <h1>The Little RPG Archive<span class="cursor"></span></h1>
+  <p class="tagline">A small, growing collection of browser-based text adventures &mdash;
+  bureaucratic comedies, minor catastrophes, and the people sent to sort them out.</p>
+  <div class="filed">Open a case file to begin</div>
+</header>
 
-  <div id="title-main">
-    <div class="seal">🔮</div>
-    <div class="big-title">The Very Last<br>Witch Finder</div>
-    <div class="big-sub">
-      A Case File of the Royal Office of Witch-Finding<br>
-      Final Active Commission &mdash; Kingdom of Brine
-    </div>
-    <div style="margin-top:16px; display:flex; gap:8px; flex-wrap:wrap; justify-content:center;">
-      <button class="title-btn" onclick="showCharSelect()">Open New Case File</button>
-      <button class="title-btn" onclick="loadGame(true)" id="load-btn" style="display:none">Resume Investigation</button>
-    </div>
-    <div style="font-size:11px; color:var(--paper-dim); margin-top:16px; max-width:380px; line-height:1.8;">
-      Type commands to play. Try: <b style="color:var(--paper)">LOOK</b>, <b style="color:var(--paper)">GO NORTH</b>, <b style="color:var(--paper)">TALK TO</b>, <b style="color:var(--paper)">INVENTORY</b>, <b style="color:var(--paper)">HELP</b>
-    </div>
-  </div>
+<main id="catalog">
+  <!-- Cards are rendered by script below -->
+</main>
 
-  <div id="char-select">
-    <div class="big-title" style="font-size:22px;">Select Your Witch Finder</div>
-    <div class="char-cards">
-      <div class="char-card" onclick="startNewGame('marta')">
-        <h3>Sgt. Marta Clench</h3>
-        <div class="char-role">Retired Cavalry &middot; Reactivated by Royal Decree</div>
-        <p>Marta has hit forty-one things with varying degrees of success and is prepared to make it forty-two. She does not believe in magic, ghosts, or asking nicely a second time.</p>
-        <p><b>Special:</b> <span style="color:var(--gold)">BASH</span> &mdash; force locked, stuck, or merely uncooperative things open through application of MIGHT.</p>
-        <div class="char-stats">
-          <span>MIGHT <b>7</b></span>
-          <span>WIT <b>2</b></span>
-          <span>RESOLVE <b>26</b></span>
-        </div>
-      </div>
-      <div class="char-card" onclick="startNewGame('oswin')">
-        <h3>Oswin Pebble</h3>
-        <div class="char-role">Junior Archivist &middot; Royal College of Unverified Phenomena</div>
-        <p>Oswin knows fourteen spells, of which roughly ten work as intended. He has read more about witches than any living person and met considerably fewer.</p>
-        <p><b>Special:</b> <span style="color:var(--gold)">CAST</span> &mdash; attempt a spell to open, reveal, or unstick things via WIT. Results may vary.</p>
-        <div class="char-stats">
-          <span>MIGHT <b>2</b></span>
-          <span>WIT <b>7</b></span>
-          <span>RESOLVE <b>18</b></span>
-        </div>
-      </div>
-    </div>
-    <button class="title-btn" onclick="hideCharSelect()" style="margin-top:8px;">Back</button>
-  </div>
-
-</div>
-
-<!-- MAIN GAME -->
-<div id="game-container">
-  <div id="header">
-    <h1>The Very Last Witch Finder</h1>
-    <span class="subtitle">ROYAL OFFICE OF WITCH-FINDING &mdash; CASE FILE: DRUBWICH</span>
-  </div>
-  <div id="main">
-    <div id="narrative-pane">
-      <div id="output"></div>
-      <div id="input-bar">
-        <span class="prompt">&gt;</span>
-        <input id="cmd-input" type="text" autocomplete="off" spellcheck="false" placeholder="enter command...">
-      </div>
-    </div>
-    <div id="stats-pane">
-      <div class="stat-block">
-        <h3>Witch Finder</h3>
-        <div class="stat-row"><span class="stat-label">Name</span><span class="stat-val" id="s-name">&mdash;</span></div>
-        <div class="stat-row"><span class="stat-label">Rank</span><span class="stat-val" id="s-rank">&mdash;</span></div>
-        <div class="stat-row"><span class="stat-label">Resolve</span><span class="stat-val" id="s-hp">&mdash;</span></div>
-        <div class="stat-row"><span class="stat-label">Might</span><span class="stat-val" id="s-might">&mdash;</span></div>
-        <div class="stat-row"><span class="stat-label">Wit</span><span class="stat-val" id="s-wit">&mdash;</span></div>
-      </div>
-      <div class="stat-block">
-        <h3>Case Status</h3>
-        <div class="stat-row"><span class="stat-label">Case</span><span class="stat-val" id="s-case">Open</span></div>
-        <div class="stat-row"><span class="stat-label">Location</span><span class="stat-val" id="s-location">&mdash;</span></div>
-        <div class="stat-row"><span class="stat-label">Moves</span><span class="stat-val" id="s-moves">0</span></div>
-        <div class="stat-row"><span class="stat-label">Score</span><span class="stat-val" id="s-score">0</span></div>
-      </div>
-      <div class="stat-block">
-        <h3>Evidence &amp; Items</h3>
-        <div id="inv-list"><span class="inv-empty">Nothing carried</span></div>
-      </div>
-      <div class="stat-block" id="hint-block">
-        <h3>Casebook</h3>
-        <div id="hint-text">Awaiting case assignment...</div>
-      </div>
-    </div>
-  </div>
-</div>
-
-<!-- DICE OVERLAY -->
-<div id="dice-overlay">
-  <div id="dice-modal">
-    <h2 id="dice-title">Skill Check</h2>
-    <div id="dice-context"></div>
-    <div class="dice-row">
-      <div class="die"><div class="die-inner"><div class="die-face" id="die1">?</div></div></div>
-      <div class="die"><div class="die-inner"><div class="die-face" id="die2">?</div></div></div>
-    </div>
-    <div id="dice-result-line"></div>
-    <button id="dice-roll-btn" onclick="diceRoll()">Roll the Dice</button>
-    <button id="dice-continue-btn" onclick="diceContinue()">Continue</button>
-  </div>
-</div>
-
-<!-- SAVE TOAST -->
-<div id="save-toast">CASE NOTES FILED</div>
+<footer>
+  Filed &amp; maintained, occasionally, by the proprietor of this archive.
+</footer>
 
 <script>
-// ════════════════════════════════════════════════════════
-//  GAME ENGINE — THE VERY LAST WITCH FINDER
-// ════════════════════════════════════════════════════════
-
-var G = {};
-var diceCallback = null;
-var cmdHistory = [];
-var cmdHistIdx = -1;
-
-var CHAR_DATA = {
-  marta: {
-    name: "Sgt. Marta Clench",
-    rank: "Sergeant (Retired, Reactivated)",
-    might: 7, wit: 2, maxHp: 26,
-    startItems: ["badge", "cosh"],
-    intro: "You are <b>Sergeant Marta Clench</b>, late of the Third Heavy Lancers, now late of retirement, now — against your considerable better judgement — the Crown's last remaining Witch Finder. You did not apply for this. The letter found you regardless, which you understand is how these things tend to work."
-  },
-  oswin: {
-    name: "Oswin Pebble",
-    rank: "Junior Archivist, Royal College of Unverified Phenomena",
-    might: 2, wit: 7, maxHp: 18,
-    startItems: ["badge", "spellbook"],
-    intro: "You are <b>Oswin Pebble</b>, Junior Archivist of the Royal College of Unverified Phenomena, and — through a sequence of administrative decisions you still don't fully understand — the Crown's last remaining Witch Finder. You have read four hundred and twelve accounts of witchcraft. You have never actually seen any. You are about to."
-  }
-};
-
-// ── INITIAL STATE ──────────────────────────────────────
-function freshState(character) {
-  var c = CHAR_DATA[character];
-  return {
-    character: character,
-    name: c.name,
-    rank: c.rank,
-    hp: c.maxHp,
-    maxHp: c.maxHp,
-    might: c.might,
-    wit: c.wit,
-    inventory: c.startItems.slice(),
-    location: "village_green",
-    moves: 0,
-    score: 0,
-    flags: {},
-    combat: null
-  };
-}
-
-// ════════════════════════════════════════════════════════
-//  WORLD DATA — ROOMS
-// ════════════════════════════════════════════════════════
-
-var ROOMS = {
-
-  "village_green": {
-    name: "Drubwich Village Green",
-    shortName: "Village Green",
-    desc: "The green is the geographical and emotional centre of Drubwich: a patch of grass, a duck pond with no ducks (there is a sign explaining this; the sign is itself confused), and a noticeboard featuring three layers of overlapping notices, the oldest of which predates the village. To the WEST stands a narrow building marked WITCH FINDER'S LODGINGS — REOPENED (PROVISIONALLY). To the EAST, raucous noise suggests THE CROOKED PINT. SOUTH, a sign points to THE GENERAL STORE. NORTH, a well-trodden path leads to the VILLAGE WELL and beyond it, the church.",
-    exits: { "north": "village_well", "south": "general_store", "east": "crooked_pint", "west": "witch_finders_lodge" },
-    items: [],
-    hint: "Begin at the LODGE (west) to collect your equipment, then explore. TALK TO people. EXAMINE things."
-  },
-
-  "witch_finders_lodge": {
-    name: "Witch Finder's Lodgings",
-    shortName: "Lodge",
-    desc: "A single damp room that has clearly been 'reopened provisionally' by someone whose enthusiasm exceeded their budget. A camp bed, a desk buried under thirty years of unanswered correspondence, and a shelf holding the standard field kit: a brass LANTERN, sitting in a thin layer of dust shaped exactly like a lantern. A faded portrait on the wall depicts a previous Witch Finder, name worn away, expression deeply unimpressed. EAST returns to the green.",
-    exits: { "east": "village_green" },
-    items: ["lantern"],
-    hint: "TAKE LANTERN. EXAMINE PORTRAIT if you're curious about your predecessors."
-  },
-
-  "crooked_pint": {
-    name: "The Crooked Pint",
-    shortName: "The Crooked Pint",
-    desc: "The Crooked Pint leans at an angle that the regulars insist is 'character' and the structural surveyor insists is 'a problem'. The bar is busy despite — or because of — the fact that the beer here has, for the last eleven years, told drinkers exactly what they want to hear. BESS TANNER works the bar with the weary competence of someone who has heard every secret in the village at least twice. A door to the EAST leads out toward the MARKET ROAD. The way WEST returns to the green.",
-    exits: { "west": "village_green", "east": "market_road" },
-    items: [],
-    hint: "TALK TO BESS. Try ORDER BEER — but be ready for what it tells you."
-  },
-
-  "general_store": {
-    name: "Drubwich General Store",
-    shortName: "General Store",
-    desc: "A shop that sells, according to the sign, 'EVERYTHING (WITHIN REASON)'. Shelves of tinned goods, candles, twine, and a locked case marked WITCHCRAFT-ADJACENT ITEMS (REGULATED) sit under the watchful eye of PIM, the shopkeeper, who has the air of someone who has seen every kind of customer and filed a complaint about most of them. A side door to the EAST leads toward the BLACKSMITH. A path SOUTH leads toward DRUBWICH MANOR. NORTH returns to the green.",
-    exits: { "north": "village_green", "east": "blacksmith", "south": "manor_hall" },
-    items: [],
-    hint: "TALK TO PIM. Ask about salt."
-  },
-
-  "blacksmith": {
-    name: "Grom's Forge",
-    shortName: "Forge",
-    desc: "The forge radiates heat and the smell of hot metal and mild resentment. GROM, the blacksmith, is a man of few words and considerable forearms, currently reshaping something that was, until recently, a different thing entirely. Tools of every description hang from every available surface. WEST returns to the general store.",
-    exits: { "west": "general_store" },
-    items: [],
-    hint: "TALK TO GROM. He has something you'll need for handling cursed paperwork."
-  },
-
-  "manor_hall": {
-    name: "Drubwich Manor — Entrance Hall",
-    shortName: "Manor Hall",
-    desc: "The entrance hall of Drubwich Manor is grand in the way that things become grand by simply being expensive and old at the same time. Portraits of past Pemberton-Vales line the walls, each looking marginally more disappointed than the last. LADY PEMBERTON-VALE herself stands near the fireplace, dressed for an occasion that does not appear to be happening. NORTH leads back to the village.",
-    exits: { "north": "general_store" },
-    items: [],
-    hint: "TALK TO LADY PEMBERTON-VALE. She has Opinions, and possibly a clue."
-  },
-
-  "village_well": {
-    name: "The Village Well",
-    shortName: "Village Well",
-    desc: "An old stone well sits at the crossing of three paths, its bucket long since stolen, its rope mysteriously still damp. A sign reads: WISHES GRANTED AT OWNER'S RISK. NO REFUNDS. Someone has thrown in several coins anyway, and at least one strongly worded letter. SOUTH returns to the green. NORTH, the spire of DRUBWICH CHURCH is visible. EAST, raised voices suggest THE STOCKS.",
-    exits: { "south": "village_green", "north": "drubwich_church", "east": "the_stocks" },
-    items: [],
-    hint: "EXAMINE WELL if you're curious, but don't expect much. Continue NORTH or EAST."
-  },
-
-  "the_stocks": {
-    name: "The Village Stocks",
-    shortName: "The Stocks",
-    desc: "A set of wooden stocks stands in a small fenced yard, currently occupied by TOM WICKET, a young man with straw in his hair and the expression of someone who has had a great deal of time to think about how he got here. A hand-lettered sign reads: TOM WICKET — ACCUSED WITCH (PENDING REVIEW). Tom does not look like a witch. He looks like someone's nephew. WEST returns to the well.",
-    exits: { "west": "village_well" },
-    items: [],
-    hint: "TALK TO TOM. He's almost certainly not a witch. BASH or CAST OPEN the stocks to free him."
-  },
-
-  "drubwich_church": {
-    name: "St. Undecided's Church",
-    shortName: "Church",
-    desc: "St. Undecided's is a small stone church, named — according to local tradition — after a saint who couldn't settle on a single miracle and so is credited with several minor ones instead. The floor is ankle-deep in water that has no obvious source and shows no sign of leaving. SEXTON CRICK bails water with a teacup, with the calm of a man who has made peace with futility. A heavy door to the NORTH leads up into the BELL TOWER, currently stuck fast. A side passage WEST leads to the GRAVEYARD. SOUTH returns to the well.",
-    exits: { "south": "village_well", "north": "bell_tower", "west": "graveyard" },
-    items: [],
-    hint: "TALK TO SEXTON CRICK. The bell tower door is stuck — BASH or CAST OPEN to get through."
-  },
-
-  "bell_tower": {
-    name: "The Bell Tower",
-    shortName: "Bell Tower",
-    desc: "A narrow spiral of stairs leads up to a small wooden platform and an enormous bell, green with age and silence. Pinned to the wall beside it is a hand-written NOTE, ink smudged by damp and — you suspect — fear. The view from the single window takes in most of Drubwich, including, in the distance, the OLD MILL, and — if you look very carefully — what might be a second, very faint, slightly translucent Drubwich, superimposed over the first, like a photograph taken twice. SOUTH leads back down to the church.",
-    exits: { "south": "drubwich_church" },
-    items: ["tower_note"],
-    locked: "tower_locked",
-    hint: "TAKE the NOTE. Try RING BELL — it might do something."
-  },
-
-  "graveyard": {
-    name: "Drubwich Graveyard",
-    shortName: "Graveyard",
-    desc: "Headstones lean at companionable angles among long grass, most names worn to suggestion rather than statement. One grave, newer than the rest, reads: HERE LIES BARTHOLOMEW QUILL, WITCH FINDER (1ST CLASS), WHO FINALLY FOUND ONE. Standing beside it — or perhaps part of it — is a translucent figure who appears to be examining his own headstone with the air of someone proofreading. EAST returns to the church.",
-    exits: { "east": "drubwich_church" },
-    items: [],
-    hint: "TALK TO QUILL. Or TALK TO GHOST. He was the last one to hold your job, in every sense."
-  },
-
-  "market_road": {
-    name: "The Market Road",
-    shortName: "Market Road",
-    desc: "A rutted road leads out of Drubwich proper, lined with the kind of hedgerows that have opinions about who's allowed through. A weathered signpost points NORTH toward THE RIVER, SOUTH toward THE FARM, and WEST back to the village. The air here has a faint hum to it, like a held note that's been held slightly too long.",
-    exits: { "west": "crooked_pint", "north": "river_bend", "south": "farm_lane" },
-    items: [],
-    hint: "An anomaly zone — stay alert. FIGHT, OUTWIT, or FLEE if something appears."
-  },
-
-  "farm_lane": {
-    name: "The Farm Lane",
-    shortName: "Farm Lane",
-    desc: "A narrow lane runs between drystone walls toward COOP'S FARM. The hedgerows here grow in a suspiciously tidy order — Hawthorn, then Ivy, then Juniper, skipping with quiet embarrassment past several letters that apparently don't grow on hedges. NORTH leads back to the market road. EAST leads to the farm itself.",
-    exits: { "north": "market_road", "east": "alphabetical_farm" },
-    items: [],
-    hint: "Continue EAST to the farm — that's where the real trouble is."
-  },
-
-  "alphabetical_farm": {
-    name: "Coop's Farm",
-    shortName: "Coop's Farm",
-    desc: "Coop's Farm is, by any normal standard, a disaster, and by Drubwich's current standards, Tuesday. The crops grow in a single neat row, left to right, in strict alphabetical order: Artichokes, then Beetroot, then Cabbages, then Daikon, all the way along — and the row simply stops, mid-furrow, at a gap where 'M' should be, the soil disturbed as though something was recently pulled out of it. MILDRED COOP stands in the middle of it all with the expression of a woman who has run out of words for this.",
-    exits: { "west": "farm_lane" },
-    items: [],
-    hint: "TALK TO MILDRED. EXAMINE the GAP in the row — something's stuck there."
-  },
-
-  "river_bend": {
-    name: "The River Bend",
-    shortName: "River Bend",
-    desc: "The River Drubble bends here around a stand of willows, and today — being, technically, a Tuesday, although a great deal hinges on what 'technically' means — it is flowing distinctly, undeniably, uphill. Water climbs the gentle slope with the patient determination of something that has given up arguing about it. Reeds along the bank have caught a few small items the river didn't want, or perhaps couldn't keep. SOUTH returns to the market road. WEST, a track disappears toward the FOREST EDGE.",
-    exits: { "south": "market_road", "west": "forest_edge" },
-    items: [],
-    hint: "EXAMINE the REEDS. Something's caught there. You'll want the TONGS to take it safely."
-  },
-
-  "forest_edge": {
-    name: "The Forest Edge",
-    shortName: "Forest Edge",
-    desc: "Where the farmland gives up and the forest takes over, the trees stand in a loose ring like spectators at an event they're not sure they should be watching. The light here is the colour of late afternoon regardless of the actual time, which — given everything else — you've stopped questioning. EAST leads back to the river. WEST, the trees thicken into the DEEP FOREST.",
-    exits: { "east": "river_bend", "west": "deep_forest" },
-    items: [],
-    hint: "Press on WEST into the deep forest. An anomaly zone — stay alert."
-  },
-
-  "deep_forest": {
-    name: "The Deep Forest",
-    shortName: "Deep Forest",
-    desc: "The deep forest is dark, old, and — you note with a Witch Finder's professional interest — slightly more populated with strangeness per square foot than is generally advertised. Moss grows in directions moss has no business growing. Somewhere nearby, something that is probably a bird makes a noise that is probably not a bird noise. EAST leads back to the forest edge. NORTH, a thin trail leads to a HERMIT'S HUT, marked by a curl of smoke. SOUTH, the trees open onto the OLD MILL.",
-    exits: { "east": "forest_edge", "north": "hermits_hut", "south": "old_mill" },
-    items: [],
-    hint: "A high-anomaly zone. The HERMIT (north) and the OLD MILL (south) both matter."
-  },
-
-  "hermits_hut": {
-    name: "The Hermit's Hut",
-    shortName: "Hermit's Hut",
-    desc: "A small round hut of mud, branches, and what might generously be called 'found materials' sits in a clearing that smells of woodsmoke and crushed herbs. HERMIT ALDOUS sits cross-legged outside it, apparently doing nothing, with the total commitment of a man for whom 'doing nothing' is a discipline rather than an absence. SOUTH leads back into the deep forest.",
-    exits: { "south": "deep_forest" },
-    items: [],
-    hint: "TALK TO ALDOUS. He's lived out here a long time — he's seen things."
-  },
-
-  "old_mill": {
-    name: "The Old Mill",
-    shortName: "Old Mill",
-    desc: "The mill's great wheel turns slowly in a stream that, you note with some relief, is flowing in the correct direction. MILLER HOBB leans in the doorway, watching the wheel with the resigned fondness of a man married to his work in the legal sense as well as the practical one. A heavy wooden hatch in the floor, marked CELLAR, is bolted shut. NORTH leads back into the deep forest.",
-    exits: { "north": "deep_forest", "down": "mill_cellar" },
-    items: [],
-    hint: "TALK TO HOBB. The CELLAR hatch (DOWN) is bolted — use the BENT KEY if you have it, or BASH/CAST OPEN."
-  },
-
-  "mill_cellar": {
-    name: "The Mill Cellar",
-    shortName: "Mill Cellar",
-    desc: "The cellar is cold, dark, and stacked with sacks of flour gone solid with age. Your LANTERN throws long shadows across a wall that looks, on close inspection, like every other wall in the cellar — except for one section where the shadows fall slightly wrong, as though there's a draught coming from somewhere that, by any reasonable measure, shouldn't have an opening at all. UP leads back to the mill.",
-    exits: { "up": "old_mill" },
-    items: [],
-    locked: "mill_locked",
-    hint: "EXAMINE the WALL. If you know about Sub-Office 7, try BASH WALL or CAST REVEAL."
-  },
-
-  "causality_registry": {
-    name: "Causality Registry — Sub-Office 7",
-    shortName: "Sub-Office 7",
-    desc: "Beyond the wall is a long, narrow office that should not, by any law of geography, fit inside a mill cellar — and, on reflection, doesn't; the far end of the room is visibly further away than the mill itself. Filing cabinets line both walls, drawers labelled with dates, place names, and increasingly desperate annotations. A single desk holds an open LEDGER, its pages covered in the same shimmering ink as the amendment slips. The air smells of old paper and a very long sigh. NORTH leads deeper, toward a lit doorway. WEST returns to the mill cellar.",
-    exits: { "west": "mill_cellar", "north": "clerks_office" },
-    items: [],
-    hint: "EXAMINE the LEDGER. If you're carrying all three Amendment Slips, you'll learn a great deal."
-  },
-
-  "clerks_office": {
-    name: "The Clerk's Office",
-    shortName: "Clerk's Office",
-    desc: "A small, cramped office at the end of Sub-Office 7, lit by a single candle that has been burning, by the look of the wax, for roughly eleven years without once going out. Behind the desk sits CLERK WRIGLEY — a thin, grey, profoundly tired-looking man, surrounded by towers of paperwork, each one a patch, an amendment, a small desperate fix to a much larger problem he has spent over a decade trying not to think about directly. He looks up as you enter. He does not look surprised. SOUTH returns to Sub-Office 7.",
-    exits: { "south": "causality_registry" },
-    items: [],
-    hint: "TALK TO WRIGLEY. This is the end of the case."
-  }
-
-};
-
-
-var ITEMS = {
-  "badge": {
-    name: "Witch Finder's Badge",
-    desc: "A small tin badge stamped with a crest of crossed candles over an open book. Beneath it, in letters too small for the badge's own good: 'AUTHORITY: PROVISIONAL. FUNDING: DISCONTINUED. RESPECT: VARIABLE.'",
-    takeable: true
-  },
-  "cosh": {
-    name: "Standard-Issue Cosh",
-    desc: "A leather-wrapped length of lead, regulation pattern, well-worn. The regulation itself was discontinued some years ago, but the cosh remains stubbornly effective.",
-    takeable: true
-  },
-  "spellbook": {
-    name: "Dog-Eared Spellbook",
-    desc: "A battered volume titled 'PRACTICAL THAUMATURGY FOR THE TIME-PRESSED' (3rd Edition, water-damaged). Several pages are stuck together. You have read it front to back eleven times and it has read you back at least twice.",
-    takeable: true
-  },
-  "lantern": {
-    name: "Brass Field Lantern",
-    desc: "A dependable brass lantern with a cracked but serviceable lens. Standard Witch Finder issue, alongside the badge, the cosh or spellbook, and a faint but persistent sense of being underprepared.",
-    takeable: true
-  },
-  "iron_tongs": {
-    name: "Iron Tongs",
-    desc: "A pair of long iron tongs, blackened with use. Useful for handling anything you'd rather not touch directly — hot coals, cursed objects, certain kinds of correspondence.",
-    takeable: true
-  },
-  "salt_pouch": {
-    name: "Pouch of Consecrated Salt",
-    desc: "A small canvas pouch of salt that has been blessed, consecrated, and — according to the label — 'lightly admonished'. Traditional ward against anomalies. One good throw, the label warns, is usually enough. It does not specify what happens after a bad throw.",
-    takeable: true
-  },
-  "amendment_slip_farm": {
-    name: "Amendment Slip (Agricultural)",
-    desc: "A small slip of pale paper, warm to the touch. It reads: 'AMENDMENT 4,012 — Re: Crop Behaviour, Drubwich Parish. Filed under Causality Registry, Sub-Office 7. Approved: C.W. Status: PATCH, NOT FIX.' The ink shimmers slightly, as though reconsidering itself.",
-    takeable: true
-  },
-  "amendment_slip_river": {
-    name: "Amendment Slip (Hydrological)",
-    desc: "A small slip of pale paper, damp despite having been nowhere near water for some time. It reads: 'AMENDMENT 4,019 — Re: River Flow Direction (Tuesdays). Filed under Causality Registry, Sub-Office 7. Approved: C.W. Status: PATCH, NOT FIX.'",
-    takeable: true
-  },
-  "amendment_slip_pub": {
-    name: "Amendment Slip (Conversational)",
-    desc: "A small slip of pale paper that, when you're not looking directly at it, appears to be whispering. It reads: 'AMENDMENT 4,031 — Re: Ambient Truthfulness, The Crooked Pint. Filed under Causality Registry, Sub-Office 7. Approved: C.W. Status: PATCH, NOT FIX.'",
-    takeable: true
-  },
-  "bent_key": {
-    name: "Bent Iron Key",
-    desc: "A heavy iron key, bent at an angle that suggests it has been used to open something it really wasn't meant to. It still works. This is either a testament to good craftsmanship or a serious design flaw.",
-    takeable: true
-  },
-  "tower_note": {
-    name: "Bell-Ringer's Note",
-    desc: "A note pinned inside the bell tower, in handwriting that gets progressively more frantic toward the bottom. It reads: '...heard something under the mill again last night. Found a door where there shouldn't be one. Brass plate reads SUB-OFFICE 7. Telling no one. Ringing the bell helps, somehow. — H.'",
-    takeable: true
-  },
-  "manor_receipt": {
-    name: "Faded Receipt",
-    desc: "A receipt, decades old, on Causality Registry letterhead: 'Received from: Drubwich Manor. Item: One (1) complaint, re: déjà vu, persistent. Filed under: Sub-Office 7. Action taken: None on record.' Someone has added in pencil: 'told you so — H.'",
-    takeable: true
-  },
-  "cheese_wedge": {
-    name: "Wedge of Hard Cheese",
-    desc: "A substantial wedge of farmhouse cheese, slightly alphabetised at the edges. It restores Resolve when eaten.",
-    takeable: true
-  },
-  "hermit_charm": {
-    name: "Hermit's Charm",
-    desc: "A small carved charm of knotted root and string. The hermit said it 'helps you remember which day it actually is,' which sounds useless until you've spent time near the river.",
-    takeable: true
-  }
-};
-
-// ════════════════════════════════════════════════════════
-//  NPCs & DIALOGUE
-// ════════════════════════════════════════════════════════
-
-var NPCS = {
-
-  pim: {
-    location: "general_store",
-    name: "Pim",
-    talk: function() {
-      if (!G.flags.pim_talked) {
-        G.flags.pim_talked = true;
-        print("Pim looks up from a ledger of their own — a much smaller, much less ominous one.", "normal");
-        print("\"Witch Finder, eh? Reopened the lodge, I heard. Bold move, given the funding situation. Or lack of one.\"", "normal");
-        print("They glance toward the locked cabinet marked WITCHCRAFT-ADJACENT ITEMS (REGULATED).", "normal");
-        print("\"If you're going up against anything genuinely uncanny, you'll want salt. Consecrated, mind, not the cooking kind — though between you and me the difference is mostly paperwork.\"", "normal");
-        addToInventory("salt_pouch");
-        addScore(3);
-        print("Pim slides a small pouch across the counter.", "normal");
-        print("You receive: <b>Pouch of Consecrated Salt</b>", "loot");
-        setHint("You have salt — useful if an anomaly gets the better of you. Visit GROM at the forge next.");
-      } else {
-        print("\"Mind how you go,\" says Pim. \"And if you see whatever's been making the duck pond's ducks not exist, tell it we'd like them back.\"", "normal");
-      }
-    }
-  },
-
-  grom: {
-    location: "blacksmith",
-    name: "Grom",
-    talk: function() {
-      if (!G.flags.grom_talked) {
-        G.flags.grom_talked = true;
-        print("Grom looks up from the anvil. He does not stop working. This appears to be a greeting.", "normal");
-        print("\"Witch Finder.\" A statement, not a question. \"Heard there's paper out there that burns cold. Causality Office stuff. Seen it before — forty years back, when old Quill had your job.\"", "normal");
-        print("He reaches under the bench without looking and produces a long pair of iron tongs.", "normal");
-        print("\"Take these. Made 'em for Quill. He never came back for 'em, on account of being dead. You'll want them if you're picking up anything stamped by the Causality Registry — that ink bites.\"", "normal");
-        addToInventory("iron_tongs");
-        addScore(5);
-        print("You receive: <b>Iron Tongs</b>", "loot");
-        setHint("With the tongs, you can safely collect any Amendment Slips you find without getting burned.");
-      } else {
-        print("Grom nods at you, which from Grom is roughly equivalent to a hug.", "normal");
-      }
-    }
-  },
-
-  lady_pemberton: {
-    location: "manor_hall",
-    name: "Lady Pemberton-Vale",
-    talk: function() {
-      if (!G.flags.lady_talked) {
-        G.flags.lady_talked = true;
-        print("Lady Pemberton-Vale turns from the fireplace with the practiced grace of someone who has been informed, all her life, that she has presence.", "normal");
-        print("\"Ah. The new Witch Finder. About time. I reported that wretched Wicket boy myself, you know — caught him muttering near the duck pond the very week the ducks stopped existing. Stands to reason.\"", "normal");
-        print("You point out that correlation isn't causation.", "normal");
-        print("\"It's certainly *something*-ation,\" she says, with the confidence of the very rich.", "normal");
-        print("She pauses, and for a moment something more genuine crosses her face.", "normal");
-        print("\"...Between us — this manor has had a feeling for thirty years. Like a room you've already been in, before you've been in it. My grandmother complained to someone about it once. Some 'Causality' people. Never heard back, of course. No one ever does.\"", "normal");
-        if (!hasItem("manor_receipt")) {
-          addToInventory("manor_receipt");
-          addScore(8);
-          print("She produces a faded receipt from a drawer and hands it over, almost reluctantly.", "normal");
-          print("You receive: <b>Faded Receipt</b>", "loot");
-          G.flags.knows_suboffice7 = true;
-          setHint("'Sub-Office 7' — that name is starting to come up a lot. The OLD MILL might be worth investigating.");
-        }
-      } else {
-        print("\"Do hurry up and find your witch,\" says Lady Pemberton-Vale. \"Or whatever it turns out to actually be. I have a luncheon.\"", "normal");
-      }
-    }
-  },
-
-  tom: {
-    location: "the_stocks",
-    name: "Tom Wicket",
-    talk: function() {
-      if (G.flags.tom_freed) {
-        print("Tom, free and considerably more cheerful, is picking straw out of his collar. \"Still can't believe I got blamed for the ducks,\" he says. \"I don't even like ducks. No offence to ducks.\"", "normal");
-        return;
-      }
-      if (!G.flags.tom_talked) {
-        G.flags.tom_talked = true;
-        print("Tom looks up with the cautious hope of a man who has been visited mainly by people throwing things.", "normal");
-        print("\"You're not here to throw something, are you? Only Lady Pemberton-Vale's lot have been very thorough about that and I'm running out of dignity to lose.\"", "normal");
-        print("You ask what happened.", "normal");
-        print("\"I said 'where've the ducks gone' a bit loudly near the pond, and three days later someone decided that made me a witch. I'm a cooper's apprentice. I make barrels. I don't even own a hat with a point on it.\"", "normal");
-        setHint("Tom seems harmless. Try BASH STOCKS or CAST OPEN to free him.");
-      } else {
-        print("\"Any chance of that whole 'freeing me' thing?\" Tom asks, with the air of someone who has asked this several times already today.", "normal");
-      }
+  // ════════════════════════════════════════════════════════
+  //  GAME CATALOG
+  //  To add a new game: add an entry below. That's it.
+  // ════════════════════════════════════════════════════════
+  var GAMES = [
+    {
+      seal: "📜",
+      title: "A Matter of Some Urgency",
+      fileNo: "Case 01",
+      accent: "#d8a648",
+      desc: "A licensed Deliverer is sent to hand-deliver a single letter to a recipient who has been dead for some time. Standing orders are clear. The orders did not anticipate this.",
+      meta: "Comedy · Fighting Fantasy dice combat · ~20\u201330 min",
+      href: "matter-of-some-urgency/"
     },
-    free: function() {
-      if (G.flags.tom_freed) {
-        print("Tom is already free. He gives you a small wave anyway.", "normal");
-        return;
-      }
-      G.flags.tom_freed = true;
-      print("The stocks give way. Tom climbs out, rubbing his wrists and his dignity in roughly equal measure.", "normal");
-      print("\"Oh — thank you. Genuinely. Here —\" he digs in his pocket \"— I found this stuck in the stocks' lock mechanism ages ago. Couldn't get it out from this side. Bent old key. Might be useful, might just be a bent old key. Honestly, at this point, both feel equally likely.\"", "normal");
-      addToInventory("bent_key");
-      addScore(10);
-      print("You receive: <b>Bent Iron Key</b>", "loot");
-      setHint("The bent key might open something with a stubborn lock. The OLD MILL has a bolted cellar hatch...");
-      updateStats();
-    }
-  },
-
-  sexton_crick: {
-    location: "drubwich_church",
-    name: "Sexton Crick",
-    talk: function() {
-      if (!G.flags.crick_talked) {
-        G.flags.crick_talked = true;
-        print("Sexton Crick continues bailing water with his teacup, unhurried, as though this were a perfectly normal Tuesday activity, which — to be fair — by Drubwich standards, it might be.", "normal");
-        print("\"Water's been coming up through the floor for eleven years,\" he says. \"From nowhere, near as I can tell. I asked the Bishop about it once. He said — and I quote — 'have you tried not thinking about it?' Bishops aren't what they used to be.\"", "normal");
-        print("He nods toward the stuck door to the north.", "normal");
-        print("\"Bell tower door's been jammed since around the same time. Old Hettie — bell-ringer before my time — used to say ringing the bell 'kept things in tune'. Haven't heard it rung in years. Door won't budge.\"", "normal");
-        setHint("BASH or CAST OPEN the bell tower door (NORTH).");
-      } else {
-        print("\"Mind the water,\" says Crick, not looking up. \"It's not deep. It's just persistent. Bit like everything else round here.\"", "normal");
-      }
-    }
-  },
-
-  ghost_quill: {
-    location: "graveyard",
-    name: "the Ghost of Bartholomew Quill",
-    talk: function() {
-      if (!G.flags.quill_talked) {
-        G.flags.quill_talked = true;
-        print("The translucent figure turns. Up close, you recognise the face from the portrait in the lodge — minus thirty years and most of its substance.", "normal");
-        print("\"Another one,\" says the ghost of Bartholomew Quill, without much surprise. \"They keep sending people. I suppose that's something — better than sending no one, which is what they did for the eleven years after I died, which, incidentally, is also roughly how long this whole mess has been going on. Funny, that.\"", "normal");
-        if (G.character === "marta") {
-          print("He looks you over. \"Clench, isn't it? Cavalry stock. Your grandfather served under my brother, at the Battle of Three Slightly Different Tuesdays. Different war. Long story. You have his jaw.\"", "normal");
-        } else {
-          print("He looks you over. \"Pebble — College of Unverified Phenomena? I sent that College a report once. Forty pages. Got back a form letter thanking me for my 'interesting hypothesis'. I died shortly after, for entirely unrelated reasons, I'm assured.\"", "normal");
-        }
-        print("", "normal");
-        print("\"Here's what killed me, for what it's worth: not a witch. Never was a witch. It's the mill. Underneath it. There's an office down there that isn't supposed to be there, run by a fellow who isn't supposed to still be there, fixing a mistake that was never supposed to happen, badly, repeatedly, for over a decade. 'Sub-Office 7', the brass plate said. I got as far as the door. Heart gave out. Excitement, probably. Or possibly just the stairs.\"", "normal");
-        G.flags.knows_suboffice7 = true;
-        addScore(8);
-        setHint("Sub-Office 7 — beneath the OLD MILL. You'll need to find a way down, then through.");
-      } else {
-        print("The ghost of Quill gives a small, tired wave. \"Go on, then. Don't let an old corpse hold up the investigation.\"", "normal");
-      }
-    }
-  },
-
-  bess: {
-    location: "crooked_pint",
-    name: "Bess Tanner",
-    talk: function() {
-      if (!G.flags.bess_talked) {
-        G.flags.bess_talked = true;
-        print("Bess wipes a tankard that was already clean, the universal gesture of a barkeep buying time to assess a stranger.", "normal");
-        print("\"Witch Finder. Right. Well — you'll want to know about the beer, then, since everyone always wants to know about the beer.\"", "normal");
-        print("\"Eleven years back, the beer started... agreeing with people. Whatever you're hoping to hear, that's what comes out the tap. Sounds harmless. It is not harmless. Had a man convinced his terrible business idea was brilliant for three straight months on the strength of half a pint.\"", "normal");
-        setHint("Try ORDER BEER, if you dare. Or EXAMINE BAR for anything out of place.");
-      } else {
-        print("\"Don't have more than one,\" Bess warns. \"Whatever it tells you the second time, you'll believe it twice as hard.\"", "normal");
-      }
+    {
+      seal: "🔮",
+      title: "The Very Last Witch Finder",
+      fileNo: "Case 02",
+      accent: "#ad7fe6",
+      desc: "The Crown's last remaining Witch Finder is sent to investigate three reported anomalies in the village of Drubwich. Choose your investigator: brute force, or theory. The truth is mostly paperwork.",
+      meta: "Comedy · 2 playable characters · ~30\u201350 min",
+      href: "witch-finder/"
     },
-    order: function() {
-      var lines;
-      if (G.character === "marta") {
-        lines = [
-          "The beer tells you that you were right to leave the cavalry, that nobody blames you, and that the cosh is, in fact, a perfectly respectable weapon for a person of your standing.",
-          "The beer tells you that this case will be simple, that you'll be home by supper, and that the Royal Office definitely intends to reinstate your pension.",
-          "The beer tells you that everyone in this village is, secretly, a little bit afraid of you, and that this is appropriate and correct."
-        ];
-      } else {
-        lines = [
-          "The beer tells you that your forty-page report to the College was groundbreaking, and that the form letter was a clerical error, and that they're definitely going to write back properly any day now.",
-          "The beer tells you that all fourteen of your spells work perfectly and always have, and that any apparent evidence to the contrary was someone else's fault.",
-          "The beer tells you that you are, despite everything, doing extremely well, all things considered, and everyone agrees."
-        ];
-      }
-      if (!G.flags.beer_ordered) {
-        G.flags.beer_ordered = true;
-        print("Bess slides a tankard across. You drink.", "normal");
-        print(lines[Math.floor(Math.random()*lines.length)], "normal");
-        print("", "normal");
-        print("It is, you note with professional detachment, extremely pleasant to hear. This is, you suspect, the entire problem.", "normal");
-        if (!hasItem("amendment_slip_pub")) {
-          print("As you set the tankard down, you notice a small slip of pale paper stuck underneath it — left, perhaps, by someone who set their own drink down rather suddenly.", "system");
-          ROOMS["crooked_pint"].items.push("amendment_slip_pub");
-        }
-      } else {
-        print("\"One's your limit,\" says Bess firmly, taking the tankard back before you can argue — which, she points out, is exactly what the beer would want you to do.", "normal");
-      }
+    {
+      seal: "＋",
+      title: "More Cases Pending",
+      fileNo: "",
+      accent: "#6b6151",
+      desc: "Further case files are being processed and will be added to this drawer in due course. The backlog is, regrettably, considerable.",
+      meta: "",
+      href: null
     }
-  },
+  ];
 
-  mildred: {
-    location: "alphabetical_farm",
-    name: "Mildred Coop",
-    talk: function() {
-      if (!G.flags.mildred_talked) {
-        G.flags.mildred_talked = true;
-        print("Mildred turns, and for a moment her composure cracks into something rawer.", "normal");
-        print("\"Eleven years, the crops have grown in order. Eleven years! Artichokes through Leeks, neat as you like, every season — and then nothing. A gap. Right where 'M' should be. Marrows, I'd guess. Or Mangetout. We'll never know, because something's sitting in that gap eating the alphabet, and I am DONE, Witch Finder, I am DONE being polite about it.\"", "normal");
-        print("She takes a breath.", "normal");
-        print("\"There's a slip of paper half-buried in that gap. Don't know what it is. Don't want to touch it. It's been faintly glowing since Thursday, which — for Drubwich — barely registers any more.\"", "normal");
-        setHint("EXAMINE the GAP, then TAKE the SLIP — use your TONGS if you have them.");
-      } else if (hasItem("amendment_slip_farm")) {
-        print("Mildred looks immensely relieved. \"You took it. Oh, thank goodness. Here —\" she presses a wedge of cheese into your hands \"— least I can do. Mind, with my luck, that's probably alphabetised too.\"", "normal");
-        if (!hasItem("cheese_wedge") && !G.flags.cheese_given) {
-          G.flags.cheese_given = true;
-          addToInventory("cheese_wedge");
-          addScore(5);
-          print("You receive: <b>Wedge of Hard Cheese</b>", "loot");
-        }
-      } else {
-        print("Mildred eyes the gap in her crops with the weary vigilance of a woman waiting for a kettle that has personally wronged her.", "normal");
-      }
+  var catalog = document.getElementById("catalog");
+
+  GAMES.forEach(function(game, i) {
+    var isPlaceholder = !game.href;
+    var el = document.createElement(isPlaceholder ? "div" : "a");
+    el.className = "card" + (isPlaceholder ? " placeholder" : "");
+    if (!isPlaceholder) {
+      el.href = game.href;
     }
-  },
+    el.style.setProperty("--card-accent", game.accent);
 
-  hobb: {
-    location: "old_mill",
-    name: "Miller Hobb",
-    talk: function() {
-      if (!G.flags.hobb_talked) {
-        G.flags.hobb_talked = true;
-        print("Hobb doesn't look away from the wheel.", "normal");
-        print("\"Witch Finder. Didn't think they'd send another, after Quill. Good man, Quill. Came down here asking about the cellar, about eleven years back. Never came back up — well. He did, eventually. In a box.\"", "normal");
-        print("He finally turns.", "normal");
-        print("\"Cellar hatch has been bolted since. My doing. Didn't like the draught coming up through it — cold air, and sometimes, very faintly, the sound of a quill pen. Writing. Down there. Where nothing should be writing anything.\"", "normal");
-        setHint("The cellar hatch (DOWN) is bolted. Use the BENT KEY, or BASH/CAST OPEN.");
-      } else {
-        print("\"Mind the cellar,\" says Hobb. \"Mind it a great deal, actually.\"", "normal");
-      }
+    var fileNoHtml = "";
+    if (game.fileNo) {
+      fileNoHtml = '<div class="file-no">' + game.fileNo + ' <span class="dot">&middot;</span> Active</div>';
     }
-  },
 
-  aldous: {
-    location: "hermits_hut",
-    name: "Hermit Aldous",
-    talk: function() {
-      if (!G.flags.aldous_talked) {
-        G.flags.aldous_talked = true;
-        print("Aldous opens one eye, which seems to require the same effort most people reserve for opening both.", "normal");
-        print("\"Witch Finder. Felt you coming. Not magically — just, you've got that walk. Investigative. Heavy on the heel.\"", "normal");
-        print("He gestures vaguely at the forest, the village, the general direction of everything.", "normal");
-        print("\"I've lived out here since before the world had this many Tuesdays. There's two of Drubwich now, you know — laid one on top of the other, not quite lined up. Most folk only ever see one. I see the seam. It runs right under the old mill.\"", "normal");
-        G.flags.knows_suboffice7 = true;
-        print("He hands you a small charm of knotted root.", "normal");
-        addToInventory("hermit_charm");
-        addScore(6);
-        print("You receive: <b>Hermit's Charm</b>", "loot");
-        print("\"Keep that on you near the river. Helps you remember which Tuesday you're currently having. Surprisingly useful. Off you go — the mill's south of here.\"", "normal");
-        setHint("The mill is SOUTH. The cellar beneath it leads to 'the seam' — Sub-Office 7.");
-      } else {
-        print("Aldous has both eyes closed again. \"Mill's south,\" he says, without opening them. \"Still is. Probably always will be, give or take a reality.\"", "normal");
-      }
+    var playRowHtml = "";
+    if (!isPlaceholder) {
+      playRowHtml = '<div class="play-row"><span>Open File</span><span class="arrow">&rarr;</span></div>';
     }
-  },
 
-  wrigley: {
-    location: "clerks_office",
-    name: "Clerk Wrigley",
-    talk: function() {
-      if (!G.flags.wrigley_confronted) {
-        G.flags.wrigley_confronted = true;
-        print("Clerk Wrigley sets down his pen with the careful precision of a man who has rehearsed this moment, dreaded it, and is nonetheless almost relieved it's finally here.", "normal");
-        print("\"You found me, then. Took eleven years. I'd say 'well done' but I'm not sure it's the sort of thing one should be congratulated for finding.\"", "normal");
-        print("He gestures at the towers of paperwork.", "normal");
-        print("\"Eleven years ago, I made a filing error. A small one — Drubwich got logged into two adjacent causality streams instead of one. Should've taken an afternoon to correct. But correcting it properly means COLLAPSING one of the streams back into the other — and I couldn't be sure which version of Drubwich would... remain. So instead I've spent eleven years making small amendments. Patches. Keeping both versions stable enough that nobody outside would notice.\"", "normal");
-        print("", "normal");
-        print("\"It hasn't worked, particularly. The crops know. The river knows. The beer, apparently, knows. Things which exist in both versions slightly out of sync start... leaking. Anomalies, you'd call them. I call them Tuesdays I haven't finished with yet.\"", "normal");
-
-        if (hasItem("amendment_slip_farm") && hasItem("amendment_slip_river") && hasItem("amendment_slip_pub")) {
-          print("", "normal");
-          print("He notices the three slips in your possession and something in his face crumples slightly.", "normal");
-          print("\"You found all three. Of course you did. That's — that's rather thorough of you, actually. Most people don't even notice the pub one.\"", "normal");
-          addScore(15);
-        }
-
-        print("", "normal");
-        if (G.character === "marta") {
-          print("\"I don't suppose,\" he says, eyeing your cosh with the resigned air of a man who has read his own ending in several reports, \"that you'd consider NOT hitting the ledger?\"", "normal");
-        } else {
-          print("\"You're from the College, aren't you. I read your Department's reports, you know. Forty pages, once, on exactly this kind of phenomenon. Whoever wrote that understood the theory better than I ever did. I always wondered what happened to them.\"", "normal");
-        }
-        print("", "normal");
-        print("\"Either way. The ledger needs a Final Correction — properly applied, this time, not patched. It will collapse the duplicate stream. Drubwich becomes one village again, properly, for the first time in eleven years. I... don't know exactly what happens to me, in that case. I've rather been avoiding finding out.\"", "normal");
-        setHint("Type SEAL to attempt the Final Correction. This is the end of the case.");
-      } else if (!G.flags.game_complete) {
-        print("Wrigley looks at you with the exhausted patience of a man waiting for a decision that isn't his to make.", "normal");
-        print("\"Whenever you're ready. SEAL it. I'll be here. I'm always here.\"", "normal");
-      } else {
-        print("The office is empty. The candle, you notice, has finally gone out.", "normal");
-      }
-    }
-  }
-
-};
-
-
-// ════════════════════════════════════════════════════════
-//  WANDERING ANOMALIES (COMBAT)
-// ════════════════════════════════════════════════════════
-
-var ANOMALY_ZONES = ["market_road", "river_bend", "forest_edge", "deep_forest", "farm_lane"];
-
-var ANOMALIES = {
-
-  tuesday_creature: {
-    name: "A Tuesday That Doesn't Know It's Tuesday",
-    hp: 7,
-    intro: "Something drifts across your path — a patch of grey, drizzly weather, roughly person-shaped, radiating the unmistakable atmosphere of a Tuesday afternoon. It looks at you. It looks at the sky. It looks deeply, personally betrayed by both of you.",
-    attacks: [
-      "It drizzles on you, out of what can only be described as spite.",
-      "It insists, very loudly and with great conviction, that it is actually Thursday, and head-butts you to emphasise the point.",
-      "It wraps you in a damp, melancholy fog that smells faintly of regret and overcooked vegetables."
-    ],
-    outwits: [
-      "You point out, gently but firmly, that today genuinely IS Tuesday. The creature deflates with relief, thanks you, and drifts off to go be an ordinary, unremarkable Tuesday somewhere it's needed.",
-      "You tell it that Wednesday has already happened without it. It panics, visibly, and rushes off after a day that left hours ago.",
-      "You ask it what it's worried about. It admits, after a long pause, that it's worried about being late for itself. You assure it this is impossible. It seems to find this comforting."
-    ],
-    deathMsg: "It dissolves into a light, apologetic drizzle and a faint, lingering sense of unresolved tension.",
-    loot: null,
-    xp: 4
-  },
-
-  scarecrow: {
-    name: "A Repossessed Scarecrow",
-    hp: 9,
-    intro: "A scarecrow detaches itself from a fence post with a creak of old wood and considerably more purpose than scarecrows generally have. Its button eyes track you with the methodical attention of something working through a list.",
-    attacks: [
-      "It swings a straw-stuffed arm at you, in what you can only describe as strict alphabetical order — currently somewhere around 'F', for 'Face'.",
-      "It headbutts you. Filed, you suspect, under 'H', for 'Headbutt'.",
-      "It throws a clump of soil at you, labelled — you're fairly sure you can read this — 'S', for 'Soil'."
-    ],
-    outwits: [
-      "You point out that 'Scarecrow' comes well before 'Stop' in the alphabet, and so, technically, it should have stopped several letters ago. It pauses, processes this with visible difficulty, and collapses into a heap.",
-      "You ask it what letter it's currently on. It tells you, proudly. You inform it that letter doesn't come next. It has what can only be called a small existential crisis and falls over.",
-      "You rearrange its hat slightly. This appears to violate some unspoken filing convention so badly that it simply gives up and sits down."
-    ],
-    deathMsg: "It slumps back into a pile of straw, neatly sorted by length.",
-    loot: "cheese_wedge",
-    xp: 5
-  },
-
-  echo_yesterday: {
-    name: "An Echo of Yesterday",
-    hp: 8,
-    intro: "The air in front of you ripples, and for a moment there are two of you — except the other one is a half-second behind, repeating a step you took a moment ago, and it does not look pleased to see you, although 'you' might be generous; it might just be reacting to something that hasn't happened to it yet.",
-    attacks: [
-      "It mirrors a punch you threw a moment ago — and lands it, late, but no less solidly for that.",
-      "It says something you're about to say, except meaner, and somehow that's what hurts.",
-      "It trips over a rock that, for you, hasn't been placed there yet, and falls into you out of sheer bad timing."
-    ],
-    outwits: [
-      "You stand perfectly still. The Echo, being a moment behind, eventually catches up to a point in time where you weren't there at all, and simply... isn't, any more.",
-      "You do something you've never done before. The Echo has nothing to copy, and flickers out of existence, mildly confused.",
-      "You wait. Yesterday, as a rule, doesn't last. Neither, in the end, does the Echo."
-    ],
-    deathMsg: "It fades out, a beat behind everything — including, eventually, its own ending.",
-    loot: null,
-    xp: 5
-  },
-
-  filing_imp: {
-    name: "A Disgruntled Filing Imp",
-    hp: 8,
-    intro: "A small, ink-stained creature drops out of nowhere clutching a rubber stamp in one hand and a ledger in the other, and regards you with the particular hostility reserved for people who have not filled in a form correctly.",
-    attacks: [
-      "It stamps you firmly with a rubber stamp reading 'NOT APPLICABLE'.",
-      "It cites an obscure subsection of causality bylaw at you while hitting you with the ledger, which is heavier than it looks.",
-      "It demands to see your Form 1-A, and then, without waiting for a response, attacks you anyway."
-    ],
-    outwits: [
-      "You ask it which Sub-Office it reports to. It opens its mouth, closes it again, and sits down heavily to think about this, possibly for the first time ever.",
-      "You point out that its stamp is upside down, and has been for some time. It is so mortified it disappears in a small puff of correctional fluid.",
-      "You fill out its form correctly, on the spot, in triplicate. It has genuinely never seen this happen before and doesn't know what to do, so it leaves."
-    ],
-    deathMsg: "It folds itself neatly into a small paper crane and drifts away on a draft of pure procedure.",
-    loot: "bent_key",
-    xp: 6
-  }
-
-};
-
-function checkWanderingAnomaly() {
-  if (G.combat) return;
-  if (ANOMALY_ZONES.indexOf(G.location) === -1) return;
-  if (Math.random() > 0.30) return;
-
-  var keys = Object.keys(ANOMALIES);
-  var key = keys[Math.floor(Math.random() * keys.length)];
-  var template = ANOMALIES[key];
-
-  G.combat = {
-    key: key,
-    name: template.name,
-    hp: template.hp,
-    maxHp: template.hp
-  };
-
-  print("", "normal");
-  print("⚔ " + template.intro, "combat");
-  print("(FIGHT, OUTWIT, FLEE, or USE SALT)", "system");
-  updateStats();
-}
-
-
-// ════════════════════════════════════════════════════════
-//  UTILITY FUNCTIONS
-// ════════════════════════════════════════════════════════
-
-function hasItem(key) { return G.inventory.indexOf(key) !== -1; }
-
-function addToInventory(key) {
-  if (!hasItem(key)) G.inventory.push(key);
-  updateInventoryDisplay();
-}
-
-function removeFromInventory(key) {
-  var idx = G.inventory.indexOf(key);
-  if (idx !== -1) G.inventory.splice(idx, 1);
-  updateInventoryDisplay();
-}
-
-function findInInventory(target) {
-  for (var i = 0; i < G.inventory.length; i++) {
-    if (itemMatches(G.inventory[i], target)) return G.inventory[i];
-  }
-  return null;
-}
-
-function itemMatches(key, target) {
-  if (!ITEMS[key]) return false;
-  var name = ITEMS[key].name.toLowerCase();
-  var t = target.toLowerCase().replace(/^the\s+/, "");
-  if (key.toLowerCase().indexOf(t) !== -1) return true;
-  if (name.indexOf(t) !== -1) return true;
-  var words = t.split(/\s+/);
-  for (var i = 0; i < words.length; i++) {
-    if (words[i].length > 3 && name.indexOf(words[i]) !== -1) return true;
-    if (words[i].length > 3 && key.indexOf(words[i]) !== -1) return true;
-  }
-  return false;
-}
-
-function findCharacterInRoom(target) {
-  for (var k in NPCS) {
-    var c = NPCS[k];
-    if (c.location === G.location) {
-      var name = c.name.toLowerCase().replace(/^the\s+/, "");
-      var t = target.toLowerCase().replace(/^the\s+/, "");
-      if (name.indexOf(t) !== -1 || t.indexOf(k) !== -1 || k.indexOf(t) !== -1) return k;
-    }
-  }
-  return null;
-}
-
-function getCharsInRoom() {
-  var result = [];
-  for (var k in NPCS) {
-    if (NPCS[k].location === G.location) result.push(k);
-  }
-  return result;
-}
-
-function addScore(n) {
-  G.score += n;
-  updateStats();
-}
-
-// ════════════════════════════════════════════════════════
-//  OUTPUT / UI
-// ════════════════════════════════════════════════════════
-
-function print(text, type) {
-  type = type || "normal";
-  var out = document.getElementById("output");
-  var div = document.createElement("div");
-  div.className = "msg msg-" + type;
-  if (type === "divider") {
-    div.textContent = "────────────────────────────────────────────────────";
-  } else {
-    div.innerHTML = text;
-  }
-  out.appendChild(div);
-  out.scrollTop = out.scrollHeight;
-}
-
-function setHint(text) {
-  document.getElementById("hint-text").innerHTML = text;
-}
-
-function updateStats() {
-  var room = ROOMS[G.location];
-  document.getElementById("s-hp").textContent = G.hp + " / " + G.maxHp;
-  var hpEl = document.getElementById("s-hp");
-  hpEl.className = "stat-val " + (G.hp > Math.ceil(G.maxHp*0.6) ? "hp-ok" : G.hp > Math.ceil(G.maxHp*0.3) ? "hp-low" : "hp-crit");
-  document.getElementById("s-might").textContent = G.might;
-  document.getElementById("s-wit").textContent = G.wit;
-  document.getElementById("s-moves").textContent = G.moves;
-  document.getElementById("s-score").textContent = G.score;
-  document.getElementById("s-name").textContent = G.name;
-  document.getElementById("s-rank").textContent = G.rank;
-  document.getElementById("s-location").textContent = room ? room.shortName : "—";
-  updateInventoryDisplay();
-  updateCombatStats();
-}
-
-function updateInventoryDisplay() {
-  var el = document.getElementById("inv-list");
-  if (G.inventory.length === 0) {
-    el.innerHTML = "<span class=\"inv-empty\">Nothing carried</span>";
-  } else {
-    el.innerHTML = G.inventory.map(function(k) {
-      return "<div class=\"inv-item\">" + (ITEMS[k] ? ITEMS[k].name : k) + "</div>";
-    }).join("");
-  }
-}
-
-function updateCombatStats() {
-  var caseEl = document.getElementById("s-case");
-  if (G.combat) {
-    caseEl.textContent = "⚔ " + G.combat.name;
-    caseEl.style.color = "var(--red-light)";
-  } else if (G.flags.game_complete) {
-    caseEl.textContent = "CLOSED";
-    caseEl.style.color = "var(--green)";
-  } else {
-    caseEl.textContent = "Open";
-    caseEl.style.color = "";
-  }
-}
-
-// ════════════════════════════════════════════════════════
-//  SKILL CHECK / DICE SYSTEM
-// ════════════════════════════════════════════════════════
-
-function skillCheck(title, context, stat, target, callback) {
-  diceCallback = null;
-
-  var el = document.getElementById("dice-overlay");
-  var statVal = stat === "MIGHT" ? G.might : G.wit;
-
-  document.getElementById("dice-title").textContent = title;
-  document.getElementById("dice-context").textContent = context + "\n\nRolling 2d10 + " + stat + " (" + statVal + ") vs Target " + target;
-  document.getElementById("dice-result-line").innerHTML = "";
-  document.getElementById("dice-continue-btn").style.display = "none";
-  document.getElementById("dice-roll-btn").style.display = "inline-block";
-  document.getElementById("die1").textContent = "?";
-  document.getElementById("die2").textContent = "?";
-  document.getElementById("die1").classList.remove("rolling");
-  document.getElementById("die2").classList.remove("rolling");
-
-  el.dataset.stat = stat;
-  el.dataset.statVal = statVal;
-  el.dataset.target = target;
-
-  el.classList.add("active");
-
-  diceCallback = function(success) { callback(success); };
-}
-
-function diceRoll() {
-  var el = document.getElementById("dice-overlay");
-  var statVal = parseInt(el.dataset.statVal);
-  var target = parseInt(el.dataset.target);
-  var stat = el.dataset.stat;
-
-  document.getElementById("dice-roll-btn").style.display = "none";
-  document.getElementById("die1").classList.add("rolling");
-  document.getElementById("die2").classList.add("rolling");
-
-  var rolls = 0;
-  var maxRolls = 8;
-  var rollInterval = setInterval(function() {
-    document.getElementById("die1").textContent = Math.ceil(Math.random() * 10);
-    document.getElementById("die2").textContent = Math.ceil(Math.random() * 10);
-    rolls++;
-    if (rolls >= maxRolls) {
-      clearInterval(rollInterval);
-      var r1 = Math.ceil(Math.random() * 10);
-      var r2 = Math.ceil(Math.random() * 10);
-      document.getElementById("die1").textContent = r1;
-      document.getElementById("die2").textContent = r2;
-      document.getElementById("die1").classList.remove("rolling");
-      document.getElementById("die2").classList.remove("rolling");
-
-      var total = r1 + r2 + statVal;
-      var success = total >= target;
-      var resultEl = document.getElementById("dice-result-line");
-
-      resultEl.innerHTML =
-        "Rolled: " + r1 + " + " + r2 + " + " + stat + " (" + statVal + ") = <b>" + total + "</b><br>" +
-        "Target: " + target + "<br><br>" +
-        (success
-          ? "<span class=\"outcome-win\">✦ SUCCESS ✦</span>"
-          : "<span class=\"outcome-loss\">✦ FAILURE ✦</span>");
-
-      document.getElementById("dice-continue-btn").style.display = "inline-block";
-
-      var savedCallback = diceCallback;
-      diceCallback = function() { savedCallback(success); };
-    }
-  }, 80);
-}
-
-function diceContinue() {
-  document.getElementById("dice-overlay").classList.remove("active");
-  if (diceCallback) { diceCallback(); diceCallback = null; }
-}
-
-// ════════════════════════════════════════════════════════
-//  SAVE / LOAD
-// ════════════════════════════════════════════════════════
-
-function saveGame() {
-  try {
-    var saveData = buildSaveData();
-    localStorage.setItem("witchfinder_save", JSON.stringify(saveData));
-    showToast();
-    print("Case notes filed with the Royal Office. (Game saved.)", "success");
-  } catch(e) {
-    print("Save failed. The filing cabinet is jammed, possibly by a goblin.", "error");
-  }
-}
-
-function autoSave() {
-  try {
-    var saveData = buildSaveData();
-    localStorage.setItem("witchfinder_autosave", JSON.stringify(saveData));
-  } catch(e) {}
-}
-
-function buildSaveData() {
-  var roomItems = {};
-  for (var k in ROOMS) { roomItems[k] = (ROOMS[k].items || []).slice(); }
-  return {
-    character: G.character, name: G.name, rank: G.rank,
-    hp: G.hp, maxHp: G.maxHp, might: G.might, wit: G.wit,
-    inventory: G.inventory.slice(),
-    location: G.location, moves: G.moves, score: G.score,
-    flags: JSON.parse(JSON.stringify(G.flags)),
-    combat: G.combat ? JSON.parse(JSON.stringify(G.combat)) : null,
-    roomItems: roomItems
-  };
-}
-
-function loadGame(fromTitle) {
-  try {
-    var raw = localStorage.getItem("witchfinder_save") || localStorage.getItem("witchfinder_autosave");
-    if (!raw) {
-      if (!fromTitle) print("No case file found. The Royal Office has no record of your service.", "error");
-      return false;
-    }
-    var data = JSON.parse(raw);
-    G.character = data.character; G.name = data.name; G.rank = data.rank;
-    G.hp = data.hp; G.maxHp = data.maxHp;
-    G.might = data.might; G.wit = data.wit;
-    G.inventory = data.inventory;
-    G.location = data.location; G.moves = data.moves; G.score = data.score;
-    G.flags = data.flags;
-    G.combat = data.combat || null;
-    if (data.roomItems) {
-      for (var k in data.roomItems) {
-        if (ROOMS[k]) ROOMS[k].items = data.roomItems[k];
-      }
-    }
-    if (fromTitle) {
-      document.getElementById("title-screen").style.display = "none";
-    }
-    print("Previous case notes restored. Welcome back, " + G.name + ".", "success");
-    describeRoom(true);
-    updateStats();
-    return true;
-  } catch(e) {
-    print("Save data corrupted. The Royal Office apologises, profusely and at length.", "error");
-    return false;
-  }
-}
-
-function showToast() {
-  var t = document.getElementById("save-toast");
-  t.classList.add("show");
-  setTimeout(function() { t.classList.remove("show"); }, 2500);
-}
-
-// ════════════════════════════════════════════════════════
-//  PARSER
-// ════════════════════════════════════════════════════════
-
-var DIRS = {
-  "n": "north", "north": "north",
-  "s": "south", "south": "south",
-  "e": "east", "east": "east",
-  "w": "west", "west": "west",
-  "u": "up", "up": "up",
-  "d": "down", "down": "down"
-};
-
-function processCommand(raw) {
-  var input = raw.trim();
-  if (!input) return;
-
-  print("&gt; " + input, "input-echo");
-  cmdHistory.push(input);
-  cmdHistIdx = cmdHistory.length;
-
-  var lower = input.toLowerCase().trim();
-  var words = lower.split(/\s+/);
-
-  // ── COMBAT TAKES PRIORITY ──
-  if (G.combat) {
-    if (["fight","attack","hit","strike"].indexOf(words[0]) !== -1) { cmdFight(); return; }
-    if (["outwit","trick","reason","talk"].indexOf(words[0]) !== -1) { cmdOutwit(); return; }
-    if (["flee","run","retreat"].indexOf(words[0]) !== -1) { cmdFlee(); return; }
-    if (lower.indexOf("salt") !== -1) { cmdUseSalt(); return; }
-    if (["help","h","?"].indexOf(words[0]) !== -1) { cmdHelp(); return; }
-    print("You're in the middle of an encounter! Try FIGHT, OUTWIT, FLEE, or USE SALT.", "system");
-    return;
-  }
-
-  // ── MOVEMENT ──
-  if (words[0] === "go" && words.length > 1 && DIRS[words[1]]) { cmdGo(DIRS[words[1]]); return; }
-  if (DIRS[words[0]] && words.length === 1) { cmdGo(DIRS[words[0]]); return; }
-
-  // ── LOOK / EXAMINE ──
-  if (["look","l"].indexOf(words[0]) === 0 && words.length === 1) { describeRoom(true); return; }
-  if (words[0] === "look" && words[1] === "around") { describeRoom(true); return; }
-  if (["examine","ex","x","inspect","investigate","check"].indexOf(words[0]) !== -1 && words.length > 1) {
-    cmdExamine(words.slice(1).join(" ").replace(/^(at |the )+/g, ""));
-    return;
-  }
-
-  // ── INVENTORY ──
-  if (["inventory","inv","i"].indexOf(words[0]) !== -1) { cmdInventory(); return; }
-
-  // ── TAKE / DROP ──
-  if (["take","get","grab","pick"].indexOf(words[0]) !== -1) {
-    var t = words.slice(1).join(" ").replace(/^up /, "").replace(/^(the |a |an )+/g, "");
-    cmdTake(t); return;
-  }
-  if (words[0] === "drop") {
-    var t2 = words.slice(1).join(" ").replace(/^(the |a |an )+/g, "");
-    cmdDrop(t2); return;
-  }
-
-  // ── TALK ──
-  if (words[0] === "talk" || words[0] === "speak" || words[0] === "ask") {
-    var t3 = words.slice(1).join(" ").replace(/^(to |with )+/g, "").replace(/^(the |a |an )+/g, "");
-    cmdTalk(t3); return;
-  }
-
-  // ── EAT / DRINK ──
-  if (["eat","drink","consume"].indexOf(words[0]) !== -1) {
-    var t4 = words.slice(1).join(" ").replace(/^(the |a |an )+/g, "");
-    cmdConsume(t4); return;
-  }
-  if (lower === "order beer" || lower === "order a beer" || lower === "drink beer" || lower === "buy beer") { cmdOrderBeer(); return; }
-
-  // ── BASH ──
-  if (words[0] === "bash" || words[0] === "break" || words[0] === "force" || words[0] === "smash") {
-    var t5 = words.slice(1).join(" ").replace(/^(the |a |an |open )+/g, "");
-    cmdBash(t5); return;
-  }
-
-  // ── CAST ──
-  if (words[0] === "cast") {
-    var t6 = words.slice(1).join(" ").replace(/^(the |a |an |on |open )+/g, "");
-    cmdCast(t6); return;
-  }
-
-  // ── RING BELL ──
-  if (lower.indexOf("ring") !== -1 && lower.indexOf("bell") !== -1) { cmdRingBell(); return; }
-
-  // ── FREE / RELEASE (Tom Wicket) ──
-  if (["free","release","let"].indexOf(words[0]) !== -1) { cmdFreeTom(); return; }
-
-  // ── SEAL ──
-  if (words[0] === "seal" || lower === "final correction" || lower === "correct ledger" || lower === "file form") { cmdSeal(); return; }
-
-  // ── SAVE / LOAD ──
-  if (words[0] === "save") { saveGame(); return; }
-  if (words[0] === "load") { loadGame(false); return; }
-
-  // ── HELP ──
-  if (["help","h","?"].indexOf(words[0]) !== -1) { cmdHelp(); return; }
-
-  // ── WAIT ──
-  if (["wait","z"].indexOf(words[0]) !== -1) {
-    print("You wait. Somewhere, a Tuesday passes uneasily.", "system");
-    G.moves++; checkWanderingAnomaly(); updateStats(); autoSave();
-    return;
-  }
-
-  print("You're not sure how to do that. Type HELP if you're stuck.", "error");
-}
-
-// ════════════════════════════════════════════════════════
-//  MOVEMENT & LOOK
-// ════════════════════════════════════════════════════════
-
-function cmdGo(dir) {
-  var room = ROOMS[G.location];
-  var dest = room.exits[dir];
-
-  if (!dest) {
-    print("You can't go that way.", "error");
-    return;
-  }
-
-  var destRoom = ROOMS[dest];
-
-  // Locked-room checks
-  if (destRoom.locked) {
-    var lockFlag = destRoom.locked;
-    if (lockFlag === "tower_locked" && !G.flags.tower_open) {
-      print("The bell tower door is stuck fast. You'll need to BASH or CAST OPEN to get through.", "system");
-      return;
-    }
-    if (lockFlag === "mill_locked" && !G.flags.mill_open) {
-      print("The cellar hatch is bolted shut. Use the BENT KEY, or BASH/CAST OPEN.", "system");
-      return;
-    }
-    if (lockFlag === "registry_hidden" && !G.flags.registry_open) {
-      print("There's nothing here but a wall — though something about the shadows on it still seems wrong.", "system");
-      return;
-    }
-  }
-
-  G.location = dest;
-  G.moves++;
-  describeRoom(false);
-  checkWanderingAnomaly();
-  updateStats();
-  autoSave();
-}
-
-function describeRoom(forceFull) {
-  var room = ROOMS[G.location];
-  print("", "normal");
-  print(room.name.toUpperCase(), "location");
-  print(room.desc, "normal");
-
-  if (room.items && room.items.length > 0) {
-    var visible = room.items.filter(function(k) { return ITEMS[k] && ITEMS[k].takeable; });
-    if (visible.length > 0) {
-      print("", "normal");
-      print("You can see: " + visible.map(function(k) { return ITEMS[k].name; }).join(", ") + ".", "system");
-    }
-  }
-
-  var chars = getCharsInRoom();
-  if (chars.length > 0) {
-    print("", "normal");
-    print("Present here: " + chars.map(function(k) { return NPCS[k].name; }).join(", ") + ".", "system");
-  }
-
-  setHint(room.hint || "Explore, EXAMINE things, and TALK TO people.");
-}
-
-// ════════════════════════════════════════════════════════
-//  ROOM-SPECIFIC EXAMINE TARGETS
-// ════════════════════════════════════════════════════════
-
-var ROOM_EXAMINE = {
-
-  village_green: {
-    "noticeboard": "Three layers of notices, peeled and re-pinned over decades. The newest, on top, reads: 'WITCH FINDER WANTED. MUST BE ABLE TO START IMMEDIATELY. PREVIOUS APPLICANTS NEED NOT — SEE BELOW.' Beneath it, an older notice: 'WITCH FINDER WANTED, URGENTLY.' Beneath THAT, oldest of all, barely legible: 'Quill, B. — Witch Finder, 1st Class. Reporting for duty.'",
-    "board": "@noticeboard",
-    "pond": "The duck pond contains pond, water-weed, three stones arranged suggestively, and a small printed sign reading: 'DUCKS: TEMPORARILY UNAVAILABLE. WE APOLOGISE FOR ANY INCONVENIENCE THIS MAY CAUSE TO DUCKS.' Nobody seems to know who put the sign there. Nobody seems to find that strange."
-  },
-
-  witch_finders_lodge: {
-    "portrait": "The portrait shows a stern man in a long coat, badge prominent, expression suggesting he has just been told something he already suspected and didn't want confirmed. A small brass plate reads: B. QUILL, 1ST CLASS. Someone has added, in chalk, underneath: 'GOOD LUCK.' The chalk looks recent.",
-    "desk": "The desk is buried under three decades of unopened correspondence, mostly addressed to 'THE WITCH FINDER (IF ANY)'. One envelope, near the top, is addressed in handwriting that matches the chalk on the portrait."
-  },
-
-  general_store: {
-    "cabinet": "The locked cabinet contains, according to its hand-written inventory: 'assorted wards (1)', 'a horseshoe of disputed orientation (1)', and 'a jar of something that used to be a curse (1, possibly expired)'. Pim has, wisely, never opened it to check.",
-    "case": "@cabinet"
-  },
-
-  manor_hall: {
-    "portraits": "Generations of Pemberton-Vales gaze down from their frames, each with the same long nose and the same expression of having just remembered something unpleasant at a dinner party. The newest portrait, of the current Lady Pemberton-Vale, is identical to the rest except the unpleasant memory looks more recent."
-  },
-
-  village_well: {
-    "well": "Looking down, you see your own reflection looking back up — and, for just a moment, what looks like a second reflection, very slightly out of step with the first, as if the water can't quite decide which of you it's reflecting. You decide not to think about it too hard. The water settles, and there's only one of you again. Probably."
-  },
-
-  the_stocks: {
-    "sign": "The sign reads: 'TOM WICKET — ACCUSED WITCH (PENDING REVIEW)'. Beneath it, in much smaller writing, someone has added: 'Review: still pending. It has been eleven days. We acknowledge this is a long time for a 'pending review' and would like to assure the public that absolutely nothing is being done about it.'"
-  },
-
-  drubwich_church: {
-    "water": "The water on the floor is clean, cold, and entirely without explanation. It doesn't drain. It doesn't rise. It just... is, the way a held breath just is, right up until it isn't.",
-    "floor": "@water",
-    "door": "The door to the bell tower is swollen shut in its frame, paint cracked along the seam. It hasn't been opened in years, by the look of the dust on the hinges. BASH or CAST OPEN to force it."
-  },
-
-  graveyard: {
-    "headstone": "HERE LIES BARTHOLOMEW QUILL, WITCH FINDER (1ST CLASS), WHO FINALLY FOUND ONE. Beneath the dates, someone — possibly Quill himself, posthumously, which raises questions — has added: 'It wasn't even a witch. Tell the next one. — B.Q.'",
-    "grave": "@headstone"
-  },
-
-  market_road: {
-    "signpost": "The signpost points NORTH to 'THE RIVER (CURRENTLY UPHILL, TUESDAYS)', SOUTH to 'COOP'S FARM (ALPHABETICAL, ONGOING)', and WEST to 'THE VILLAGE (NORMAL, MOSTLY)'. Someone has scratched a fourth direction onto the post, pointing at nothing in particular, labelled simply: 'ELSEWHERE.'"
-  },
-
-  farm_lane: {
-    "hedgerow": "The hedgerow runs Hawthorn, Ivy, Juniper — alphabetical, like everything else round here — with a noticeable gap where 'K' should be. A small handwritten sign, jammed into the gap, reads: 'Kohlrabi did not feel ready.'",
-    "hedges": "@hedgerow",
-    "hedgerows": "@hedgerow"
-  },
-
-  forest_edge: {
-    "trees": "The trees stand in a near-perfect circle, evenly spaced, facing inward — like an audience, or a jury. You try not to feel watched. You feel watched anyway."
-  },
-
-  deep_forest: {
-    "moss": "The moss here grows in tidy spirals on the north side of the trees, the south side, and, in several cases, the middle of the trunk, facing directly outward. Moss is not generally known for ambition. This moss has ambition."
-  },
-
-  old_mill: {
-    "wheel": "The mill wheel turns steadily, water flowing the correct direction — DOWNHILL — which, after the river, feels almost insultingly normal.",
-    "hatch": "A heavy wooden hatch, bolted from this side, set into the floor. Cold air seeps from the cracks around it — and, if you hold very still, the faint, unmistakable scritch-scritch of a pen, writing, somewhere below.",
-    "cellar": "@hatch",
-    "bolt": "@hatch"
-  },
-
-  bell_tower: {
-    "window": "Through the cracked window, you can see all of Drubwich laid out below — and, if you squint, something else: a second village, fainter, very slightly offset, like a reflection in a window that doesn't quite match the room behind it. Both villages have a duck pond. Only one has ducks.",
-    "bell": "A great bronze bell, green with age, rope long since rotted away. RING BELL, if you're feeling bold — or just curious."
-  },
-
-  causality_registry: {
-    "cabinets": "The filing cabinets are labelled by date and place — hundreds of them, going back centuries, most ordinary, a handful marked with a small red tab reading 'ONGOING'. Only one drawer, near the desk, has a red tab. It's labelled DRUBWICH."
-  },
-
-  clerks_office: {
-    "candle": "The candle has been burning for eleven years without going out and without getting any shorter. Wrigley has stopped finding this remarkable.",
-    "paperwork": "Towers of forms, amendments, and patches — each one a small, careful, increasingly desperate fix. The most recent, on top, is dated this morning."
-  }
-
-};
-
-function resolveExamineText(roomKey, key) {
-  var entry = ROOM_EXAMINE[roomKey] && ROOM_EXAMINE[roomKey][key];
-  if (typeof entry === "string" && entry.charAt(0) === "@") {
-    return resolveExamineText(roomKey, entry.slice(1));
-  }
-  return entry;
-}
-
-// ════════════════════════════════════════════════════════
-//  EXAMINE / TAKE / DROP / INVENTORY / TALK / CONSUME
-// ════════════════════════════════════════════════════════
-
-function cmdExamine(target) {
-  if (!target) { print("Examine what?", "error"); return; }
-
-  // Self
-  if (["self","me","myself"].indexOf(target) !== -1) {
-    print("You look about as composed as someone in your position can reasonably expect to look. The badge is on straight, at least.", "normal");
-    return;
-  }
-
-  // Inventory items
-  var invKey = findInInventory(target);
-  if (invKey) { print(ITEMS[invKey].desc, "normal"); return; }
-
-  // Special: alphabetical_farm gap / crops
-  if (G.location === "alphabetical_farm" && /(gap|row|crop|crops|field|furrow)/.test(target)) {
-    print("The crops run, with horrible precision, Artichokes-Beetroot-Cabbages-Daikon-Endive-Fennel-Garlic-Hops... all the way to Leeks, and then stop dead at an empty patch of disturbed soil. Something pale is half-buried there, glowing faintly.", "normal");
-    if (!ROOMS["alphabetical_farm"].items_seen_slip) {
-      ROOMS["alphabetical_farm"].items_seen_slip = true;
-      if (ROOMS["alphabetical_farm"].items.indexOf("amendment_slip_farm") === -1 && !hasItem("amendment_slip_farm")) {
-        ROOMS["alphabetical_farm"].items.push("amendment_slip_farm");
-        print("That's an Amendment Slip. You could TAKE it — though it looks warm. Your TONGS, if you have them, would help.", "system");
-      }
-    }
-    return;
-  }
-
-  // Special: river_bend reeds
-  if (G.location === "river_bend" && /(reed|reeds|river|water)/.test(target)) {
-    print("The reeds bend the wrong way — upstream, against the current, which today means UP the slope. Caught among them, fluttering as though trying to escape the laws of physics altogether, is a small slip of pale paper.", "normal");
-    if (!ROOMS["river_bend"].items_seen_slip) {
-      ROOMS["river_bend"].items_seen_slip = true;
-      if (ROOMS["river_bend"].items.indexOf("amendment_slip_river") === -1 && !hasItem("amendment_slip_river")) {
-        ROOMS["river_bend"].items.push("amendment_slip_river");
-        print("That's an Amendment Slip. You could TAKE it — though it looks warm. Your TONGS, if you have them, would help.", "system");
-      }
-    }
-    return;
-  }
-
-  // Special: mill_cellar wall
-  if (G.location === "mill_cellar" && /(wall|shadow|shadows|draught|draft)/.test(target)) {
-    if (G.flags.registry_open) {
-      print("The wall has a doorway in it now, of course. You've been through it. The shadows have settled down considerably since.", "normal");
-    } else if (G.flags.knows_suboffice7) {
-      print("Now that you know what you're looking for, it's almost obvious: the shadows on this section of wall fall as though there's an opening here — a doorway-shaped patch of wrongness, painted over, plastered over, but not quite gone. 'SUB-OFFICE 7' rings in your memory. BASH WALL or CAST REVEAL feels like the right next step.", "normal");
-    } else {
-      print("Just a wall. The shadows fall a little oddly across it, but you've no idea what you're looking for yet, or why.", "normal");
-    }
-    return;
-  }
-
-  // Room items
-  var room = ROOMS[G.location];
-  for (var i = 0; i < room.items.length; i++) {
-    if (itemMatches(room.items[i], target)) { print(ITEMS[room.items[i]].desc, "normal"); return; }
-  }
-
-  // NPCs
-  var npcKey = findCharacterInRoom(target);
-  if (npcKey) {
-    if (npcKey === "tom" && !G.flags.tom_freed) {
-      print("Tom Wicket, locked in the stocks, gives you a hopeful look. He really doesn't look like a witch.", "normal");
-    } else if (npcKey === "ghost_quill") {
-      print("The ghost of Bartholomew Quill is translucent, slightly luminous, and dressed in a coat identical to the one in the lodge portrait — if rather less dusty, all things considered.", "normal");
-    } else if (npcKey === "wrigley") {
-      print("Clerk Wrigley is thin, grey, and surrounded by paper. He looks like a man who has been almost-finished with something for eleven years.", "normal");
-    } else {
-      print("It's " + NPCS[npcKey].name + ". TALK TO them if you haven't already.", "normal");
-    }
-    return;
-  }
-
-  // Room-specific keywords
-  var custom = resolveExamineText(G.location, target);
-  if (custom) { print(custom, "normal"); return; }
-
-  print("You don't see anything special about that.", "system");
-}
-
-function cmdTake(target) {
-  if (!target) { print("Take what?", "error"); return; }
-  var room = ROOMS[G.location];
-
-  for (var i = 0; i < room.items.length; i++) {
-    var key = room.items[i];
-    if (!ITEMS[key] || !ITEMS[key].takeable) continue;
-    if (itemMatches(key, target)) {
-      room.items.splice(i, 1);
-
-      if (key.indexOf("amendment_slip") === 0 && !hasItem("iron_tongs")) {
-        G.hp = Math.max(1, G.hp - 1);
-        print("You snatch up the slip bare-handed — and immediately regret it. It's not hot exactly, more like the memory of hot, arriving slightly late. (-1 Resolve)", "error");
-      } else if (key.indexOf("amendment_slip") === 0) {
-        print("Using the iron tongs, you lift the slip cleanly — it doesn't so much as singe.", "system");
-      }
-
-      addToInventory(key);
-      print("Taken: " + ITEMS[key].name + ".", "loot");
-
-      if (key === "tower_note" && !G.flags.knows_suboffice7) {
-        G.flags.knows_suboffice7 = true;
-        addScore(8);
-        setHint("'Sub-Office 7 — beneath the mill.' The OLD MILL has a bolted cellar hatch (DOWN).");
-      }
-
-      updateStats(); autoSave();
-      return;
-    }
-  }
-
-  var npcKey = findCharacterInRoom(target);
-  if (npcKey) { print("That seems both impractical and against regulations.", "error"); return; }
-
-  print("You don't see that here.", "error");
-}
-
-function cmdDrop(target) {
-  if (!target) { print("Drop what?", "error"); return; }
-  var key = findInInventory(target);
-  if (!key) { print("You're not carrying that.", "error"); return; }
-  removeFromInventory(key);
-  ROOMS[G.location].items.push(key);
-  print("Dropped: " + ITEMS[key].name + ".", "system");
-  updateStats(); autoSave();
-}
-
-function cmdInventory() {
-  print("", "normal");
-  print("You are carrying:", "system");
-  if (G.inventory.length === 0) {
-    print("  Nothing at all. Travelling light, or unprepared — opinions vary.", "normal");
-  } else {
-    for (var i = 0; i < G.inventory.length; i++) {
-      print("  • " + ITEMS[G.inventory[i]].name, "normal");
-    }
-  }
-}
-
-function cmdTalk(target) {
-  if (!target) { print("Talk to whom?", "error"); return; }
-  var npcKey = findCharacterInRoom(target);
-  if (!npcKey) {
-    print("There's no one like that here to talk to.", "error");
-    return;
-  }
-  NPCS[npcKey].talk();
-  updateStats(); autoSave();
-}
-
-function cmdConsume(target) {
-  if (!target) { print("Eat or drink what?", "error"); return; }
-
-  if (/beer|ale|pint/.test(target)) {
-    if (G.location === "crooked_pint") { cmdOrderBeer(); return; }
-    print("There's no beer here. The Crooked Pint is back west.", "error");
-    return;
-  }
-
-  var key = findInInventory(target);
-  if (!key) { print("You're not carrying that.", "error"); return; }
-
-  if (key === "cheese_wedge") {
-    removeFromInventory("cheese_wedge");
-    var healed = Math.min(6, G.maxHp - G.hp);
-    G.hp = Math.min(G.maxHp, G.hp + 6);
-    print("You eat the cheese. It's good — sharp, solid, reassuringly alphabetised. (+" + healed + " Resolve)", "success");
-    updateStats(); autoSave();
-    return;
-  }
-
-  print("You probably shouldn't eat that. It might be evidence.", "error");
-}
-
-function cmdOrderBeer() {
-  if (G.location !== "crooked_pint") {
-    print("There's nowhere to order a beer here. The Crooked Pint is west, back toward the green.", "error");
-    return;
-  }
-  NPCS.bess.order();
-  updateStats(); autoSave();
-}
-
-// ════════════════════════════════════════════════════════
-//  COMBAT
-// ════════════════════════════════════════════════════════
-
-function cmdFight() {
-  var anomaly = ANOMALIES[G.combat.key];
-  skillCheck("Fight: " + G.combat.name, "You square up and attack.", "MIGHT", 12, function(success) {
-    if (success) {
-      var dmg = 3 + Math.floor(Math.random() * 4);
-      G.combat.hp -= dmg;
-      print("A solid hit! " + G.combat.name + " reels.", "success");
-      if (G.combat.hp <= 0) { defeatAnomaly(false); return; }
-    } else {
-      var line = anomaly.attacks[Math.floor(Math.random() * anomaly.attacks.length)];
-      var dmg2 = 2 + Math.floor(Math.random() * 3);
-      G.hp -= dmg2;
-      print(line + " (-" + dmg2 + " Resolve)", "combat");
-      if (G.hp <= 0) { knockedOut(); return; }
-    }
-    print("(FIGHT, OUTWIT, FLEE, or USE SALT)", "system");
-    updateStats(); autoSave();
+    var metaHtml = game.meta ? '<div class="meta">' + game.meta + '</div>' : "";
+
+    el.innerHTML =
+      '<div class="tab"></div>' +
+      '<div class="card-body">' +
+        '<div class="seal">' + game.seal + '</div>' +
+        fileNoHtml +
+        '<h2>' + game.title + '</h2>' +
+        '<p class="desc">' + game.desc + '</p>' +
+        metaHtml +
+        playRowHtml +
+      '</div>';
+
+    catalog.appendChild(el);
   });
-}
-
-function cmdOutwit() {
-  var anomaly = ANOMALIES[G.combat.key];
-  skillCheck("Outwit: " + G.combat.name, "You look for an angle — something that doesn't quite add up.", "WIT", 12, function(success) {
-    if (success) {
-      var line = anomaly.outwits[Math.floor(Math.random() * anomaly.outwits.length)];
-      print(line, "success");
-      defeatAnomaly(true);
-    } else {
-      var dmg = 2 + Math.floor(Math.random() * 3);
-      G.hp -= dmg;
-      print("Your reasoning doesn't land. " + anomaly.attacks[Math.floor(Math.random() * anomaly.attacks.length)] + " (-" + dmg + " Resolve)", "combat");
-      if (G.hp <= 0) { knockedOut(); return; }
-      print("(FIGHT, OUTWIT, FLEE, or USE SALT)", "system");
-      updateStats(); autoSave();
-    }
-  });
-}
-
-function cmdFlee() {
-  skillCheck("Flee", "You look for a gap and make a break for it.", "MIGHT", 10, function(success) {
-    if (success) {
-      print("You break away cleanly. " + G.combat.name + " doesn't follow — for now.", "success");
-      G.combat = null;
-      updateStats(); autoSave();
-    } else {
-      var anomaly = ANOMALIES[G.combat.key];
-      var dmg = 2 + Math.floor(Math.random() * 3);
-      G.hp -= dmg;
-      print("You don't get clear in time. " + anomaly.attacks[Math.floor(Math.random() * anomaly.attacks.length)] + " (-" + dmg + " Resolve)", "combat");
-      if (G.hp <= 0) { knockedOut(); return; }
-      print("(FIGHT, OUTWIT, FLEE, or USE SALT)", "system");
-      updateStats(); autoSave();
-    }
-  });
-}
-
-function cmdUseSalt() {
-  if (!hasItem("salt_pouch")) {
-    print("You don't have any salt.", "error");
-    return;
-  }
-  removeFromInventory("salt_pouch");
-  print("You fling a handful of consecrated salt at " + G.combat.name + ". It recoils, shudders, and unravels entirely — gone before it can so much as object.", "success");
-  G.combat = null;
-  updateStats(); autoSave();
-}
-
-function defeatAnomaly(wasOutwitted) {
-  var anomaly = ANOMALIES[G.combat.key];
-  if (!wasOutwitted) print(anomaly.deathMsg, "success");
-  addScore(anomaly.xp);
-  if (anomaly.loot && !hasItem(anomaly.loot)) {
-    addToInventory(anomaly.loot);
-    print("It leaves behind: " + ITEMS[anomaly.loot].name + ".", "loot");
-  }
-  G.combat = null;
-  updateStats(); autoSave();
-}
-
-function knockedOut() {
-  print("", "normal");
-  print("Your Resolve gives out entirely. The world goes a soft, ringing grey...", "error");
-  print("...and you come to, some time later, back at the lodgings, with a headache and a strong sense that this case is not going to file itself.", "system");
-  G.combat = null;
-  G.hp = Math.ceil(G.maxHp / 2);
-  G.location = "witch_finders_lodge";
-  describeRoom(false);
-  updateStats(); autoSave();
-}
-
-// ════════════════════════════════════════════════════════
-//  BASH / CAST
-// ════════════════════════════════════════════════════════
-
-function cmdBash(target) {
-  if (G.location === "the_stocks" && !G.flags.tom_freed) {
-    skillCheck("Bash: The Stocks", "You set your shoulder against the stocks and heave.", "MIGHT", 9, function(success) {
-      if (success) {
-        print("The stocks splinter apart with a satisfying crack.", "success");
-        NPCS.tom.free();
-      } else {
-        print("The stocks hold — for now, but they're definitely looser than they were.", "system");
-        var dmg = 1;
-        G.hp -= dmg;
-        print("You strain something. (-" + dmg + " Resolve)", "combat");
-      }
-      updateStats(); autoSave();
-    });
-    return;
-  }
-
-  if (G.location === "drubwich_church" && /(door|tower|bell)/.test(target) && !G.flags.tower_open) {
-    skillCheck("Bash: The Bell Tower Door", "You drive your shoulder into the swollen door.", "MIGHT", 11, function(success) {
-      if (success) {
-        G.flags.tower_open = true;
-        print("The door gives way all at once, in a shower of old paint chips. The way north is open.", "success");
-        addScore(4);
-      } else {
-        print("The door doesn't move. It does, however, make a noise that suggests it's thinking about it.", "system");
-        G.hp -= 1;
-        print("(-1 Resolve)", "combat");
-      }
-      updateStats(); autoSave();
-    });
-    return;
-  }
-
-  if (G.location === "old_mill" && /(hatch|cellar|bolt|door)/.test(target) && !G.flags.mill_open) {
-    if (hasItem("bent_key")) {
-      G.flags.mill_open = true;
-      print("You don't need to bash anything — the bent key turns the bolt with a satisfying clunk. The cellar is open.", "success");
-      updateStats(); autoSave();
-      return;
-    }
-    skillCheck("Bash: The Cellar Hatch", "You wrench at the bolted hatch.", "MIGHT", 10, function(success) {
-      if (success) {
-        G.flags.mill_open = true;
-        print("The bolt shears clean off. The hatch swings open onto darkness and the smell of old flour.", "success");
-        addScore(4);
-      } else {
-        print("The bolt holds. It's old, but it's stubborn.", "system");
-        G.hp -= 1;
-        print("(-1 Resolve)", "combat");
-      }
-      updateStats(); autoSave();
-    });
-    return;
-  }
-
-  if (G.location === "mill_cellar" && /(wall|shadow|shadows)/.test(target) && !G.flags.registry_open) {
-    if (!G.flags.knows_suboffice7) {
-      print("You don't know what you're looking for, and bashing a wall at random seems like a good way to bring the cellar down on your head.", "system");
-      return;
-    }
-    skillCheck("Bash: The Wall", "Knowing what to look for, you find the seam in the plaster and put your shoulder to it.", "MIGHT", 12, function(success) {
-      if (success) {
-        revealRegistry();
-      } else {
-        print("Plaster cracks, but the wall holds. Something on the other side seems to pause, as if listening.", "system");
-        G.hp -= 1;
-        print("(-1 Resolve)", "combat");
-      }
-      updateStats(); autoSave();
-    });
-    return;
-  }
-
-  print("There's nothing here that bashing would help with.", "system");
-}
-
-function cmdCast(target) {
-  if (G.character !== "oswin") {
-    print("You don't know any spells, and glaring at it has never worked before either. Try BASH.", "system");
-    return;
-  }
-
-  if (G.location === "the_stocks" && !G.flags.tom_freed) {
-    skillCheck("Cast: OPEN", "You mutter the opening cantrip at the stocks' lock mechanism.", "WIT", 8, function(success) {
-      if (success) {
-        print("The lock clicks open with a small, satisfied chime — one of the spells that, mercifully, works exactly as advertised.", "success");
-        NPCS.tom.free();
-      } else {
-        print("Nothing happens. Or rather — something happens, just not to the lock. Your left boot is briefly, inexplicably, unlaced.", "system");
-        G.hp -= 1;
-        print("(-1 Resolve, somehow)", "combat");
-      }
-      updateStats(); autoSave();
-    });
-    return;
-  }
-
-  if (G.location === "drubwich_church" && /(door|tower|bell|open)/.test(target) && !G.flags.tower_open) {
-    skillCheck("Cast: OPEN", "You aim the opening cantrip at the swollen door.", "WIT", 10, function(success) {
-      if (success) {
-        G.flags.tower_open = true;
-        print("The door swings inward smoothly, as if it had never been stuck at all. The way north is open.", "success");
-        addScore(4);
-      } else {
-        print("The door stays shut. Somewhere above, a small amount of dust falls, for no reason you can identify.", "system");
-        G.hp -= 1;
-        print("(-1 Resolve, somehow)", "combat");
-      }
-      updateStats(); autoSave();
-    });
-    return;
-  }
-
-  if (G.location === "old_mill" && /(hatch|cellar|bolt|door|open)/.test(target) && !G.flags.mill_open) {
-    if (hasItem("bent_key")) {
-      G.flags.mill_open = true;
-      print("Before you can finish the incantation, you remember you have a key. You feel slightly foolish. The cellar is open.", "success");
-      updateStats(); autoSave();
-      return;
-    }
-    skillCheck("Cast: OPEN", "You aim the opening cantrip at the bolted hatch.", "WIT", 9, function(success) {
-      if (success) {
-        G.flags.mill_open = true;
-        print("The bolt slides itself back with a small metallic sigh. The hatch creaks open.", "success");
-        addScore(4);
-      } else {
-        print("The bolt doesn't move. Somewhere nearby, a previously-locked drawer in the mill opens itself instead, for absolutely no reason.", "system");
-        G.hp -= 1;
-        print("(-1 Resolve, somehow)", "combat");
-      }
-      updateStats(); autoSave();
-    });
-    return;
-  }
-
-  if (G.location === "mill_cellar" && /(wall|shadow|shadows|reveal)/.test(target) && !G.flags.registry_open) {
-    if (!G.flags.knows_suboffice7) {
-      print("You don't have enough to go on yet — casting REVEAL at a random wall would, at best, reveal a wall.", "system");
-      return;
-    }
-    skillCheck("Cast: REVEAL", "Knowing what you're looking for, you cast the revealing charm at the wall.", "WIT", 11, function(success) {
-      if (success) {
-        revealRegistry();
-      } else {
-        print("The wall stays solid — but for just a moment, you see the doorway anyway, overlaid on the stone like an afterimage, gone before you can act on it. Close, though.", "system");
-        G.hp -= 1;
-        print("(-1 Resolve, somehow)", "combat");
-      }
-      updateStats(); autoSave();
-    });
-    return;
-  }
-
-  print("You consider several spells. None of them seem relevant here.", "system");
-}
-
-function revealRegistry() {
-  G.flags.registry_open = true;
-  ROOMS["mill_cellar"].exits["east"] = "causality_registry";
-  print("The wall opens — not swings, not crumbles, just *opens*, the way a held breath finally lets go. Beyond it: an office. A long, narrow, impossible office, lit by lamps that weren't burning a moment ago.", "success");
-  addScore(10);
-  setHint("EAST leads into Sub-Office 7.");
-}
-
-// ════════════════════════════════════════════════════════
-//  RING BELL / FREE TOM
-// ════════════════════════════════════════════════════════
-
-function cmdRingBell() {
-  if (G.location !== "bell_tower") {
-    print("There's no bell here to ring.", "error");
-    return;
-  }
-  if (G.flags.bell_rung) {
-    print("You ring the bell again. It's a fine, deep sound. Nothing new happens, but it's satisfying all the same.", "normal");
-    return;
-  }
-  G.flags.bell_rung = true;
-  print("You take hold of the bell's frame and swing it. The note that comes out is huge, low, and — for just a moment — seems to come from two directions at once, very slightly out of time with itself, before settling into one single, clear tone that rolls out over Drubwich.", "success");
-  print("For just a moment, looking out the window, the second village snaps into focus alongside the first — and then both settle back into one. Whatever that did, it felt important.", "normal");
-  addScore(5);
-  updateStats(); autoSave();
-}
-
-function cmdFreeTom() {
-  if (G.location === "the_stocks" && !G.flags.tom_freed) {
-    cmdBash("stocks");
-    return;
-  }
-  if (G.flags.tom_freed) { print("Tom's already free.", "system"); return; }
-  print("There's no one here to free.", "error");
-}
-
-// ════════════════════════════════════════════════════════
-//  SEAL — THE ENDING
-// ════════════════════════════════════════════════════════
-
-function cmdSeal() {
-  if (G.location !== "clerks_office") {
-    print("There's nothing to seal here.", "error");
-    return;
-  }
-  if (!G.flags.wrigley_confronted) {
-    print("Perhaps TALK TO WRIGLEY first — sealing anything without context seems unwise.", "system");
-    return;
-  }
-  if (G.flags.game_complete) {
-    print("The case is already closed. You did good work, Witch Finder.", "system");
-    return;
-  }
-
-  var stat = G.character === "marta" ? "MIGHT" : "WIT";
-  var title = G.character === "marta" ? "Seal: The Final Correction (by force)" : "Seal: The Final Correction (by form)";
-  var context = G.character === "marta"
-    ? "You pick up the ledger, find the page marked DRUBWICH, and bring the Final Correction stamp down on it as hard as you possibly can."
-    : "You take a fresh Form 7-Omega from Wrigley's desk, and — carefully, in your best handwriting — begin filling in the eleven years of accumulated amendments, one box at a time.";
-
-  skillCheck(title, context, stat, 13, function(success) {
-    if (success) {
-      printEnding();
-    } else {
-      var dmg = 2;
-      G.hp -= dmg;
-      if (G.character === "marta") {
-        print("The stamp lands askew. Something in the ledger flares, briefly, and shoves back — hard. (-" + dmg + " Resolve)", "combat");
-        print("Wrigley winces. \"It, ah — it does that. The ledger's a bit defensive. Might want to try again, but — gently this time? If 'gently' is a setting you have.\"", "normal");
-      } else {
-        print("Halfway down the form, you realise Box 7-C contradicts Box 4-A in a way that makes the whole page shimmer ominously, then snap back. (-" + dmg + " Resolve)", "combat");
-        print("Wrigley leans over, apologetic. \"Sorry — should've mentioned, Box 7-C wants the date in the *other* calendar. Easy mistake. I've made it eleven years running.\"", "normal");
-      }
-      if (G.hp <= 0) { knockedOut(); return; }
-      print("(Type SEAL to try again.)", "system");
-      updateStats(); autoSave();
-    }
-  });
-}
-
-function printEnding() {
-  G.flags.game_complete = true;
-
-  if (G.character === "marta") {
-    print("", "normal");
-    print("The stamp comes down clean. DRUBWICH — FINAL CORRECTION — APPROVED.", "success");
-    print("For a moment, nothing happens. Then everything happens at once, very quietly: the candle, after eleven years, goes out. The towers of paperwork settle, gently, like something exhaling. Outside, faintly, you hear — just once — the sound of ducks.", "normal");
-    print("Wrigley looks down at his hands, as though checking they're still there. They are. \"...Oh,\" he says. \"Oh, that's — that's much better, actually. I'd quite forgotten what 'finished' felt like.\"", "normal");
-    print("", "normal");
-    print("\"For what it's worth,\" he adds, as you turn to go, \"the Causality Registry does have an Exit Interview process. Eleven years overdue, in my case. I think I'm going to go and have it. Properly, this time. Thank you, Sergeant.\"", "normal");
-  } else {
-    print("", "normal");
-    print("The last box is filled. You blot the ink, and — with the particular satisfaction of a job done correctly — slide Form 7-Omega across the desk.", "success");
-    print("Wrigley reads it. Then reads it again, more slowly, the way someone reads something they've been afraid to read for eleven years. He looks up.", "normal");
-    print("\"This is... this is exactly right. Properly cross-referenced. You even caught the 7-C thing.\" He stamps it, hands shaking slightly. DRUBWICH — FINAL CORRECTION — APPROVED.", "normal");
-    print("The candle goes out. The paperwork settles. Outside, faintly, just once: the sound of ducks.", "normal");
-    print("", "normal");
-    print("\"I don't suppose,\" Wrigley says, carefully, \"the College would have any interest in a forty-one-year-old causality clerk with very specific, very niche expertise? Asking for myself.\" You suspect the answer is yes.", "normal");
-  }
-
-  // bonus text if all three slips collected
-  if (hasItem("amendment_slip_farm") && hasItem("amendment_slip_river") && hasItem("amendment_slip_pub")) {
-    print("", "normal");
-    print("On your way out, you notice the three Amendment Slips in your bag have gone still — the shimmer fades from each of them at once, like ink finally drying after eleven years. Evidence, neatly resolved, all at the same time. Somewhere, a filing system feels very slightly less anxious.", "system");
-    addScore(20);
-  }
-
-  print("", "divider");
-  print("THE END", "title");
-  print("", "normal");
-  print("Drubwich is, for the first time in eleven years, just one village. The crops, by next morning, are growing in no particular order at all, which Mildred Coop describes — accurately — as 'a tremendous relief, agriculturally speaking'. The river flows downhill on Tuesdays, same as every other day, which nobody but you and Aldous seems to find remarkable. The beer at the Crooked Pint goes back to telling people what they don't want to hear, which Bess reports is 'more honest, if less popular'.", "normal");
-  print("", "normal");
-  print("Your final report to the Royal Office of Witch-Finding runs to one line: 'No witch. Filing error. Resolved.' It is, as far as you can determine, the first report from this office in living memory to actually close a case.", "normal");
-  print("", "normal");
-  print("FINAL SCORE: " + G.score, "loot");
-  print("", "normal");
-  print("Thanks for playing THE VERY LAST WITCH FINDER.", "system");
-
-  updateStats(); autoSave();
-}
-
-// ════════════════════════════════════════════════════════
-//  HELP
-// ════════════════════════════════════════════════════════
-
-function cmdHelp() {
-  print("", "normal");
-  print("COMMANDS", "location");
-  print("Movement: GO NORTH/SOUTH/EAST/WEST/UP/DOWN (or just N, S, E, W, U, D)", "normal");
-  print("Looking: LOOK, EXAMINE [thing]", "normal");
-  print("Items: TAKE [thing], DROP [thing], INVENTORY, EAT/DRINK [thing]", "normal");
-  print("People: TALK TO [person]", "normal");
-  print("Special: ORDER BEER, RING BELL, FREE TOM", "normal");
-  if (G.character === "marta") {
-    print("Your specialty: BASH [thing] — force things open or apart using MIGHT.", "normal");
-  } else {
-    print("Your specialty: CAST [thing] — attempt a spell using WIT.", "normal");
-  }
-  print("Combat: FIGHT, OUTWIT, FLEE, USE SALT", "normal");
-  print("Endgame: SEAL (in the Clerk's Office, once you've spoken to Wrigley)", "normal");
-  print("System: SAVE, LOAD", "normal");
-}
-
-// ════════════════════════════════════════════════════════
-//  TITLE / CHARACTER SELECT / NEW GAME
-// ════════════════════════════════════════════════════════
-
-function showCharSelect() {
-  document.getElementById("title-main").style.display = "none";
-  document.getElementById("char-select").style.display = "flex";
-}
-function hideCharSelect() {
-  document.getElementById("char-select").style.display = "none";
-  document.getElementById("title-main").style.display = "flex";
-}
-
-function startNewGame(character) {
-  G = freshState(character);
-  document.getElementById("title-screen").style.display = "none";
-  document.getElementById("output").innerHTML = "";
-
-  print("THE VERY LAST WITCH FINDER", "title");
-  print("Royal Office of Witch-Finding — Case File: Drubwich", "system");
-  print("", "divider");
-  print("", "normal");
-
-  var c = CHAR_DATA[character];
-  print(c.intro, "normal");
-  print("", "normal");
-  print("Three things have gone wrong in the village of Drubwich, each more wrong than the last: the crops grow in alphabetical order, the river flows uphill on Tuesdays, and the beer at the Crooked Pint has started telling people exactly what they want to hear. The Crown, in its wisdom, has reactivated the Office of Witch-Finding for the first time in eleven years and sent the only person available. That's you.", "normal");
-  print("", "normal");
-  print("Your standing orders are simple: find the witch. Whether there IS one is, you gather, somewhat your problem now.", "normal");
-
-  if (character === "marta") {
-    print("", "normal");
-    print("(You're carrying your badge and your cosh. Your speciality is BASH — forcing things open through the simple application of MIGHT.)", "system");
-  } else {
-    print("", "normal");
-    print("(You're carrying your badge and your spellbook. Your speciality is CAST — attempting spells via WIT, with results that may vary.)", "system");
-  }
-
-  describeRoom(false);
-  updateStats();
-  autoSave();
-
-  document.getElementById("cmd-input").focus();
-}
-
-// ════════════════════════════════════════════════════════
-//  INPUT HANDLING
-// ════════════════════════════════════════════════════════
-
-document.addEventListener("DOMContentLoaded", function() {
-  var input = document.getElementById("cmd-input");
-
-  input.addEventListener("keydown", function(e) {
-    if (e.key === "Enter") {
-      var val = input.value;
-      input.value = "";
-      processCommand(val);
-    } else if (e.key === "ArrowUp") {
-      if (cmdHistory.length > 0) {
-        cmdHistIdx = Math.max(0, cmdHistIdx - 1);
-        input.value = cmdHistory[cmdHistIdx] || "";
-        e.preventDefault();
-      }
-    } else if (e.key === "ArrowDown") {
-      if (cmdHistory.length > 0) {
-        cmdHistIdx = Math.min(cmdHistory.length, cmdHistIdx + 1);
-        input.value = cmdHistory[cmdHistIdx] || "";
-        e.preventDefault();
-      }
-    }
-  });
-
-  // Show "Resume Investigation" if a save exists
-  try {
-    if (localStorage.getItem("witchfinder_save") || localStorage.getItem("witchfinder_autosave")) {
-      document.getElementById("load-btn").style.display = "inline-block";
-    }
-  } catch(e) {}
-
-  input.focus();
-});
-
-
-
-
 </script>
-
 </body>
 </html>
