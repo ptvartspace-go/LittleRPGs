@@ -1,0 +1,2112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>A Matter of Some Urgency</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Special+Elite&family=Share+Tech+Mono&display=swap');
+
+  :root {
+    --bg:        #0e0b08;
+    --bg2:       #161109;
+    --paper:     #e2c98a;
+    --paper-dim: #a08a5a;
+    --red:       #8b3a2a;
+    --red-light: #c4503a;
+    --green:     #7a9e6e;
+    --gold:      #c8922a;
+    --border:    #3a2e1a;
+    --input-bg:  #0a0804;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--paper);
+    font-family: 'Share Tech Mono', 'Courier New', monospace;
+    font-size: 14px;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  /* ── HEADER ── */
+  #header {
+    background: var(--bg2);
+    border-bottom: 2px solid var(--border);
+    padding: 8px 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-shrink: 0;
+  }
+  #header h1 {
+    font-family: 'Special Elite', serif;
+    font-size: 16px;
+    color: var(--gold);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+  }
+  #header .subtitle {
+    font-size: 11px;
+    color: var(--paper-dim);
+    letter-spacing: 1px;
+  }
+
+  /* ── MAIN LAYOUT ── */
+  #main {
+    display: flex;
+    flex: 1;
+    overflow: hidden;
+    gap: 0;
+  }
+
+  /* ── NARRATIVE PANE ── */
+  #narrative-pane {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    border-right: 2px solid var(--border);
+    overflow: hidden;
+  }
+
+  #output {
+    flex: 1;
+    overflow-y: auto;
+    padding: 16px;
+    line-height: 1.7;
+    scroll-behavior: smooth;
+  }
+  #output::-webkit-scrollbar { width: 6px; }
+  #output::-webkit-scrollbar-track { background: var(--bg); }
+  #output::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+  .msg { margin-bottom: 10px; }
+  .msg-normal  { color: var(--paper); }
+  .msg-system  { color: var(--paper-dim); font-style: italic; }
+  .msg-error   { color: var(--red-light); }
+  .msg-success { color: var(--green); }
+  .msg-combat  { color: var(--red-light); }
+  .msg-loot    { color: var(--gold); }
+  .msg-title   { color: var(--gold); font-family: 'Special Elite', serif; font-size: 16px; letter-spacing: 1px; }
+  .msg-divider { color: var(--border); user-select: none; }
+  .msg-input-echo { color: var(--paper-dim); }
+  .msg-location { color: var(--gold); font-family: 'Special Elite', serif; }
+
+  /* ── INPUT BAR ── */
+  #input-bar {
+    display: flex;
+    align-items: center;
+    border-top: 2px solid var(--border);
+    background: var(--input-bg);
+    padding: 8px 12px;
+    gap: 8px;
+    flex-shrink: 0;
+  }
+  #input-bar .prompt { color: var(--gold); font-size: 16px; }
+  #cmd-input {
+    flex: 1;
+    background: transparent;
+    border: none;
+    outline: none;
+    color: var(--paper);
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 14px;
+    caret-color: var(--gold);
+  }
+  #cmd-input::placeholder { color: var(--paper-dim); opacity: 0.5; }
+
+  /* ── STATS PANE ── */
+  #stats-pane {
+    width: 220px;
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+    padding: 14px 12px;
+    gap: 14px;
+    background: var(--bg2);
+  }
+  #stats-pane::-webkit-scrollbar { width: 4px; }
+  #stats-pane::-webkit-scrollbar-thumb { background: var(--border); }
+
+  .stat-block { border: 1px solid var(--border); padding: 10px; }
+  .stat-block h3 {
+    font-family: 'Special Elite', serif;
+    color: var(--gold);
+    font-size: 11px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 4px;
+  }
+  .stat-row {
+    display: flex;
+    justify-content: space-between;
+    margin: 4px 0;
+    font-size: 12px;
+  }
+  .stat-label { color: var(--paper-dim); }
+  .stat-val { color: var(--paper); }
+  .stat-val.hp-ok  { color: var(--green); }
+  .stat-val.hp-low { color: var(--gold); }
+  .stat-val.hp-crit{ color: var(--red-light); }
+
+  .inv-item {
+    font-size: 12px;
+    color: var(--paper);
+    padding: 2px 0;
+    border-bottom: 1px dotted var(--border);
+  }
+  .inv-empty { color: var(--paper-dim); font-style: italic; font-size: 12px; }
+
+  /* ── HINT BLOCK ── */
+  #hint-block {
+    font-size: 11px;
+    color: var(--paper-dim);
+    line-height: 1.6;
+    border: 1px dashed var(--border);
+    padding: 8px;
+  }
+  #hint-block b { color: var(--paper); }
+
+  /* ── DICE MODAL ── */
+  #dice-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.85);
+    z-index: 100;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    gap: 20px;
+  }
+  #dice-overlay.active { display: flex; }
+
+  #dice-modal {
+    background: var(--bg2);
+    border: 2px solid var(--gold);
+    padding: 30px 40px;
+    text-align: center;
+    min-width: 340px;
+    max-width: 420px;
+  }
+  #dice-modal h2 {
+    font-family: 'Special Elite', serif;
+    color: var(--gold);
+    font-size: 18px;
+    letter-spacing: 2px;
+    margin-bottom: 6px;
+  }
+  #dice-context {
+    color: var(--paper-dim);
+    font-size: 12px;
+    margin-bottom: 20px;
+    line-height: 1.5;
+  }
+
+  .dice-row {
+    display: flex;
+    justify-content: center;
+    gap: 24px;
+    margin-bottom: 20px;
+  }
+
+  /* D10 die face */
+  .die {
+    width: 64px;
+    height: 64px;
+    position: relative;
+    perspective: 200px;
+  }
+  .die-inner {
+    width: 100%;
+    height: 100%;
+    position: relative;
+    transform-style: preserve-3d;
+  }
+  .die-face {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 26px;
+    font-family: 'Special Elite', serif;
+    color: #1a1008;
+    background: #ffffff;
+    border: 2px solid var(--gold);
+    clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
+  }
+  .die-face.rolling { animation: roll 0.6s ease-out forwards; }
+  @keyframes roll {
+    0%   { transform: rotateX(0deg)   rotateY(0deg)   rotateZ(0deg); }
+    25%  { transform: rotateX(180deg) rotateY(90deg)  rotateZ(45deg); }
+    50%  { transform: rotateX(360deg) rotateY(180deg) rotateZ(90deg); }
+    75%  { transform: rotateX(270deg) rotateY(270deg) rotateZ(135deg); }
+    100% { transform: rotateX(360deg) rotateY(360deg) rotateZ(180deg); }
+  }
+
+  #dice-result-line {
+    font-size: 13px;
+    color: var(--paper);
+    min-height: 44px;
+    line-height: 1.6;
+    margin-bottom: 16px;
+  }
+  #dice-result-line .outcome-win  { color: var(--green);     font-family: 'Special Elite', serif; font-size: 15px; }
+  #dice-result-line .outcome-loss { color: var(--red-light); font-family: 'Special Elite', serif; font-size: 15px; }
+
+  #dice-roll-btn {
+    background: var(--gold);
+    color: var(--bg);
+    border: none;
+    padding: 10px 28px;
+    font-family: 'Special Elite', serif;
+    font-size: 14px;
+    letter-spacing: 1px;
+    cursor: pointer;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+  }
+  #dice-roll-btn:hover { background: var(--paper); }
+  #dice-continue-btn {
+    background: var(--red);
+    color: var(--paper);
+    border: none;
+    padding: 10px 28px;
+    font-family: 'Special Elite', serif;
+    font-size: 14px;
+    letter-spacing: 1px;
+    cursor: pointer;
+    text-transform: uppercase;
+    display: none;
+  }
+  #dice-continue-btn:hover { background: var(--red-light); }
+
+  /* ── SAVE TOAST ── */
+  #save-toast {
+    position: fixed;
+    bottom: 60px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--bg2);
+    border: 1px solid var(--gold);
+    color: var(--gold);
+    padding: 8px 20px;
+    font-size: 12px;
+    letter-spacing: 1px;
+    opacity: 0;
+    transition: opacity 0.3s;
+    pointer-events: none;
+    z-index: 200;
+  }
+  #save-toast.show { opacity: 1; }
+
+  /* ── TITLE SCREEN ── */
+  #title-screen {
+    position: fixed;
+    inset: 0;
+    background: var(--bg);
+    z-index: 300;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    padding: 24px;
+    text-align: center;
+  }
+  #title-screen .big-title {
+    font-family: 'Special Elite', serif;
+    font-size: clamp(22px, 4vw, 38px);
+    color: var(--gold);
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    line-height: 1.3;
+  }
+  #title-screen .big-sub {
+    font-size: 13px;
+    color: var(--paper-dim);
+    letter-spacing: 2px;
+    max-width: 480px;
+    line-height: 1.8;
+  }
+  #title-screen .seal {
+    font-size: 60px;
+    margin: 8px 0;
+    animation: sealPulse 3s ease-in-out infinite;
+  }
+  @keyframes sealPulse {
+    0%, 100% { opacity: 0.7; transform: scale(1); }
+    50%       { opacity: 1;   transform: scale(1.05); }
+  }
+  .title-btn {
+    background: none;
+    border: 2px solid var(--gold);
+    color: var(--gold);
+    font-family: 'Special Elite', serif;
+    font-size: 14px;
+    letter-spacing: 2px;
+    padding: 10px 28px;
+    cursor: pointer;
+    text-transform: uppercase;
+    margin: 4px;
+    transition: background 0.2s, color 0.2s;
+  }
+  .title-btn:hover { background: var(--gold); color: var(--bg); }
+
+  #game-container { display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
+</style>
+</head>
+<body>
+
+<!-- TITLE SCREEN -->
+<div id="title-screen">
+  <div class="seal">📜</div>
+  <div class="big-title">A Matter of<br>Some Urgency</div>
+  <div class="big-sub">
+    An Interactive Comedy of Bureaucratic Adventure<br>
+    in One Act, Several Rooms, and Considerable Inconvenience
+  </div>
+  <div style="margin-top:16px; display:flex; gap:8px; flex-wrap:wrap; justify-content:center;">
+    <button class="title-btn" onclick="startNewGame()">New Delivery</button>
+    <button class="title-btn" onclick="loadGame(true)" id="load-btn" style="display:none">Resume Duty</button>
+  </div>
+  <div style="font-size:11px; color:var(--paper-dim); margin-top:16px; max-width:380px; line-height:1.8;">
+    Type commands to play. Try: <b style="color:var(--paper)">LOOK</b>, <b style="color:var(--paper)">GO NORTH</b>, <b style="color:var(--paper)">TAKE LETTER</b>, <b style="color:var(--paper)">INVENTORY</b>, <b style="color:var(--paper)">HELP</b>
+  </div>
+</div>
+
+<!-- MAIN GAME -->
+<div id="game-container">
+  <div id="header">
+    <h1>A Matter of Some Urgency</h1>
+    <span class="subtitle">OMNIPOTENT POSTAL CONSORTIUM &mdash; LICENSED DELIVERER FIELD MANUAL</span>
+  </div>
+  <div id="main">
+    <div id="narrative-pane">
+      <div id="output"></div>
+      <div id="input-bar">
+        <span class="prompt">&gt;</span>
+        <input id="cmd-input" type="text" autocomplete="off" spellcheck="false" placeholder="enter command...">
+      </div>
+    </div>
+    <div id="stats-pane">
+      <div class="stat-block">
+        <h3>Field Agent</h3>
+        <div class="stat-row"><span class="stat-label">Name</span><span class="stat-val" id="s-name">Crabwick Pell</span></div>
+        <div class="stat-row"><span class="stat-label">Rank</span><span class="stat-val">Deliverer III</span></div>
+        <div class="stat-row"><span class="stat-label">Stamina</span><span class="stat-val" id="s-hp">—</span></div>
+        <div class="stat-row"><span class="stat-label">Cunning</span><span class="stat-val" id="s-cunning">—</span></div>
+        <div class="stat-row"><span class="stat-label">Nerve</span><span class="stat-val" id="s-nerve">—</span></div>
+      </div>
+      <div class="stat-block">
+        <h3>Delivery Status</h3>
+        <div class="stat-row"><span class="stat-label">Letter</span><span class="stat-val" id="s-letter">Undelivered</span></div>
+        <div class="stat-row"><span class="stat-label">Location</span><span class="stat-val" id="s-location">—</span></div>
+        <div class="stat-row"><span class="stat-label">Moves</span><span class="stat-val" id="s-moves">0</span></div>
+        <div class="stat-row"><span class="stat-label">Score</span><span class="stat-val" id="s-score">0</span></div>
+      </div>
+      <div class="stat-block">
+        <h3>Inventory</h3>
+        <div id="inv-list"><span class="inv-empty">Nothing carried</span></div>
+      </div>
+      <div class="stat-block" id="hint-block">
+        <h3>Field Notes</h3>
+        <div id="hint-text">Awaiting assignment...</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- DICE OVERLAY -->
+<div id="dice-overlay">
+  <div id="dice-modal">
+    <h2 id="dice-title">Skill Check</h2>
+    <div id="dice-context"></div>
+    <div class="dice-row">
+      <div class="die"><div class="die-inner"><div class="die-face" id="die1">?</div></div></div>
+      <div class="die"><div class="die-inner"><div class="die-face" id="die2">?</div></div></div>
+    </div>
+    <div id="dice-result-line"></div>
+    <button id="dice-roll-btn" onclick="diceRoll()">Roll the Dice</button>
+    <button id="dice-continue-btn" onclick="diceContinue()">Continue</button>
+  </div>
+</div>
+
+<!-- SAVE TOAST -->
+<div id="save-toast">PROGRESS FILED WITH THE CONSORTIUM</div>
+
+<script>
+// ════════════════════════════════════════════════════════
+//  GAME ENGINE
+// ════════════════════════════════════════════════════════
+
+var G = {}; // game state
+var diceCallback = null;
+var typingQueue = [];
+var isTyping = false;
+var cmdHistory = [];
+var cmdHistIdx = -1;
+
+// ── INITIAL STATE ──────────────────────────────────────
+function freshState() {
+  return {
+    hp: 18,
+    maxHp: 18,
+    cunning: 4,
+    nerve: 3,
+    inventory: ["letter"],
+    location: "postal_depot",
+    moves: 0,
+    score: 0,
+    flags: {},
+    enemy: null
+  };
+}
+
+// ════════════════════════════════════════════════════════
+//  WORLD DATA
+// ════════════════════════════════════════════════════════
+
+var ITEMS = {
+  "letter": {
+    name: "The Letter",
+    desc: "A sealed envelope of considerable importance. The wax seal is the colour of a minor regret. The address reads: Mr. Horace Dunt, 1 Cobble End, Mudwick-Under-Sorrow. The word URGENT has been stamped on it seventeen times, suggesting that at some point someone lost confidence in it.",
+    takeable: false
+  },
+  "delivery_form": {
+    name: "Form 27-B (Delivery Acknowledgement)",
+    desc: "A form in triplicate. Two of the three copies are already wrong. This is considered normal.",
+    takeable: true
+  },
+  "rubber_stamp": {
+    name: "Official Rubber Stamp",
+    desc: "Stamped in red ink: RECEIVED, ACCEPTED, NOTED, REGRETTED, and FILED. Six stamps for five emotions. The sixth reads: QUERY.",
+    takeable: true
+  },
+  "lamp": {
+    name: "Regulation Field Lamp",
+    desc: "A battered brass lamp. The glass is cracked. It still works, which the Consortium considers above and beyond expectations.",
+    takeable: true
+  },
+  "cheese": {
+    name: "Half a Wheel of Cheese",
+    desc: "You are not sure how it got in your bag. It smells aggressively of purpose.",
+    takeable: true
+  },
+  "bridge_toll_ticket": {
+    name: "Bridge Toll Ticket",
+    desc: "Issued by the Warden. Bears today's date, a small drawing of a bridge, and the words 'Void if Wet'.",
+    takeable: true
+  },
+  "dragon_receipt": {
+    name: "Dragon Consultation Receipt",
+    desc: "Proof that the dragon assessed your letter and found it to be of Insufficient Significance. Signed with a claw-mark.",
+    takeable: true
+  },
+  "monks_answer": {
+    name: "Brother Flemwick's Answer (Sealed)",
+    desc: "The monk gave you a folded piece of paper and asked if you were sure you wanted it.",
+    takeable: true
+  },
+  "mushroom": {
+    name: "Philosophically Confused Mushroom",
+    desc: "It grew near the wizard's clearing. It occasionally speaks. Best not to encourage it.",
+    takeable: true
+  },
+  "raven_feather": {
+    name: "Raven Feather",
+    desc: "Dropped by a raven, possibly as a deliberate insult.",
+    takeable: true
+  },
+  "mayors_seal": {
+    name: "Mayor's Official Seal",
+    desc: "A brass disc stamped with the crest of Mudwick-Under-Sorrow: two badgers arguing over a turnip.",
+    takeable: true
+  },
+  "potion": {
+    name: "Restorative Tincture",
+    desc: "A small bottle of something that smells like regret and tastes like recovery.",
+    takeable: true
+  }
+};
+
+var ROOMS = {
+  "postal_depot": {
+    name: "The Postal Depot",
+    shortName: "Postal Depot",
+    desc: "A room of magnificent administrative entropy. Shelves sag under the weight of undelivered parcels from the previous century. A motivational poster on the wall reads: THE LETTER ALWAYS ARRIVES EVENTUALLY. Someone has added: FOR CERTAIN VALUES OF EVENTUALLY. Your supervisor's desk is empty, which is normal — he's been on his lunch break since the third of March and no one has felt strongly enough to mention it. A door leads NORTH to the King's Road.",
+    exits: { "north": "kings_road" },
+    items: ["delivery_form", "rubber_stamp", "lamp"],
+    hint: "Try LOOK, TAKE LAMP, or TAKE DELIVERY FORM. Type HELP for a full list of commands."
+  },
+  "kings_road": {
+    name: "The King's Road",
+    shortName: "King's Road",
+    desc: "The King's Road is less a road and more a long-standing agreement between two muddy verges. It stretches NORTH toward the bridge and SOUTH back to the Postal Depot. A cheese vendor appears to have abandoned their cart in the ditch. The cheese remains, optimistic.",
+    exits: { "south": "postal_depot", "north": "bridge_approach" },
+    items: ["cheese"],
+    hint: "EXAMINE the cart or TAKE the cheese. You never know when cheese will prove useful."
+  },
+  "bridge_approach": {
+    name: "Approach to Grimple Bridge",
+    shortName: "Bridge Approach",
+    desc: "The road ends at a small wooden bridge over what was, technically, a river until last August. A WARDEN sits in a folding chair beside a sign that reads: TOLL: 1 COPPER COIN OR EQUIVALENT GOODS AND/OR SERVICES. The warden is knitting something that appears to be a very long sock, or possibly a very concerned scarf. The bridge leads NORTH. To the EAST, a path disappears into the Uncertain Forest. SOUTH leads back to the road.",
+    exits: { "south": "kings_road", "east": "uncertain_forest", "north": "bridge" },
+    items: [],
+    hint: "TALK TO WARDEN. She's been here forty years — she must want something."
+  },
+  "bridge": {
+    name: "Grimple Bridge",
+    shortName: "Grimple Bridge",
+    desc: "The bridge is perfectly sound. The riverbed beneath it is perfectly dry. The Warden has guarded it for forty years regardless, on the grounds that someone has to. NORTH leads to the far bank. SOUTH returns to the approach.",
+    exits: { "south": "bridge_approach", "north": "far_bank" },
+    items: [],
+    locked: "bridge_locked",
+    lockMsg: "The Warden rises from her chair with the speed of someone who has been waiting for exactly this. \"You'll want a ticket for that,\" she says.",
+    hint: "You need a toll ticket from the Warden. TALK TO WARDEN."
+  },
+  "uncertain_forest": {
+    name: "The Uncertain Forest",
+    shortName: "Uncertain Forest",
+    desc: "The forest is called uncertain because the trees can't agree on whether it's morning or afternoon, and the light follows their lead. It smells of woodsmoke, damp philosophy, and something burning gently in the middle distance. A MUSHROOM of unusual dimensions grows beside the path. To the WEST, smoke rises from a clearing — the Wizard's Experiment, presumably. EAST leads back to the road.",
+    exits: { "west": "wizards_clearing", "east": "bridge_approach" },
+    items: ["mushroom"],
+    hint: "TALK TO MUSHROOM. Yes, really. Also explore WEST."
+  },
+  "wizards_clearing": {
+    name: "The Wizard's Clearing",
+    shortName: "Wizard's Clearing",
+    desc: "A clearing of scorched grass and mild spatial disagreement. In the centre, a circle of stones contains what appears to be a small ongoing argument between fire and physics. A WIZARD in robes of academic soot stands nearby, consulting a diagram. A MONK in grey sits cross-legged at the edge of the clearing, apparently meditating on the concept of sitting cross-legged. To the EAST, the forest path returns.",
+    exits: { "east": "uncertain_forest" },
+    items: [],
+    hint: "TALK TO WIZARD and TALK TO MONK. Both know things, though the monk's knowledge comes with conditions."
+  },
+  "far_bank": {
+    name: "The Far Bank",
+    shortName: "Far Bank",
+    desc: "The far side of the dry river. The road continues NORTH toward the mill district. SOUTH leads back over the bridge. A signpost leans at an angle suggesting it has considered its options and found them all unsatisfactory. It reads: MUDWICK-UNDER-SORROW: 2 MILES — DO NOT EXPECT MUCH.",
+    exits: { "south": "bridge", "north": "mill_road" },
+    items: [],
+    hint: "Head NORTH toward Mudwick."
+  },
+  "mill_road": {
+    name: "The Mill Road",
+    shortName: "Mill Road",
+    desc: "A road that used to serve a mill. The mill is still here. The road remembers. A large and SOMEWHAT EMBARRASSED DRAGON sits blocking the path ahead, curled around a pile of coins it clearly finds tedious. It is not dangerous in the traditional sense. It is, however, immovable by ordinary means. NORTH leads to Mudwick. SOUTH returns to the far bank.",
+    exits: { "south": "far_bank", "north": "mudwick_gate" },
+    items: [],
+    hint: "TALK TO DRAGON. It's not dangerous — just awkward. Try SHOW LETTER to the dragon."
+  },
+  "mudwick_gate": {
+    name: "The Gate of Mudwick-Under-Sorrow",
+    shortName: "Mudwick Gate",
+    desc: "A gate of weathered wood and managed expectations. A sign above reads: WELCOME TO MUDWICK-UNDER-SORROW. Below it, someone has added: WE UNDERSTAND IF YOU DON'T STAY. The MAYOR stands beneath the gate arch, wearing a chain of office and the expression of a man who has spent thirty years waiting for something to happen and is not entirely pleased that something finally has. NORTH leads into the village. SOUTH returns to the mill road.",
+    exits: { "south": "mill_road", "north": "village_square" },
+    items: [],
+    locked: "dragon_locked",
+    lockMsg: "The dragon heaves itself upright behind you, blocking the road with the quiet authority of something that has been contractually obligated to do this since 1842. \"I haven't assessed your errand yet,\" it rumbles. \"Return to the road and present the item in question.\"",
+    hint: "TALK TO MAYOR. You will need his seal to complete the delivery."
+  },
+  "village_square": {
+    name: "Mudwick Village Square",
+    shortName: "Village Square",
+    desc: "The village square is a square in shape but circular in purpose — everything here leads back to itself eventually. A RAVEN sits on the old well, watching you with the focused intelligence of something that knows it's being watched watching. A path leads WEST to Cobble End, EAST to the village shop, and SOUTH back to the gate.",
+    exits: { "south": "mudwick_gate", "west": "cobble_end", "east": "village_shop" },
+    items: [],
+    hint: "The raven has something you need. TALK TO RAVEN or EXAMINE RAVEN."
+  },
+  "village_shop": {
+    name: "The Village Shop",
+    shortName: "Village Shop",
+    desc: "A shop of comprehensive ambiguity. It sells things you didn't know you needed and has run out of things you did. A SHOPKEEPER regards you from behind a counter of meaningful clutter. A small handwritten sign says: WE DO NOT ACCEPT RETURNS OF ITEMS THAT HAVE DEVELOPED OPINIONS. A dusty shelf holds a RESTORATIVE TINCTURE. WEST leads back to the square.",
+    exits: { "west": "village_square" },
+    items: ["potion"],
+    hint: "TAKE POTION or TALK TO SHOPKEEPER."
+  },
+  "cobble_end": {
+    name: "Cobble End",
+    shortName: "Cobble End",
+    desc: "A short lane ending in a modest house. The door is old but solid. A brass number plaque reads: 1. A name card in the holder reads: H. DUNT. This is the address. This is the place. The end of your considerable journey. EAST returns to the square.",
+    exits: { "east": "village_square" },
+    items: [],
+    hint: "You've arrived. KNOCK on the door, or DELIVER LETTER."
+  }
+};
+
+// ════════════════════════════════════════════════════════
+//  CHARACTERS & DIALOGUE
+// ════════════════════════════════════════════════════════
+
+var CHARACTERS = {
+  warden: {
+    location: "bridge_approach",
+    name: "the Bridge Warden",
+    talked: false,
+    talk: function() {
+      if (!G.flags.warden_talked) {
+        G.flags.warden_talked = true;
+        print("The Warden sets down her knitting — a decision of considerable significance.", "normal");
+        print("\"Forty-two years I've kept this bridge,\" she says. \"Not because anyone asked. Not because anyone pays me. I keep it because someone has to. The river left in August of '81 and I thought: well. I'll give it a week.\"", "normal");
+        print("She studies you.", "normal");
+        print("\"You'll want a toll ticket. It's a copper coin normally, but I haven't had a copper coin since the currency reform. Do you have anything useful? Food, perhaps? My nephew was supposed to bring lunch and he hasn't been seen since 1987.\"", "normal");
+        setHint("She wants food. You have... or could find... something edible.");
+      } else if (G.flags.warden_paid) {
+        print("The Warden waves you through without looking up from her knitting. \"Already issued,\" she says. \"I keep records.\"", "normal");
+      } else {
+        print("\"Something edible,\" she says. \"That's the toll. I've been patient for forty-two years. I can wait a little longer.\"", "normal");
+        setHint("Give her something to eat. You might find food along the road.");
+      }
+    },
+    give: function(item) {
+      if (item === "cheese" || item === "mushroom") {
+        if (item === "mushroom" && !G.flags.mushroom_safe) {
+          print("\"Hmm,\" says the Warden, examining it. \"Is this the talking kind?\"", "normal");
+          print("You assure her it's fine.", "normal");
+          print("\"It said 'existence is a toll we all pay' to my knee just now.\" She eats it anyway. \"Tastes like certainty. Rare.\"", "normal");
+        } else if (item === "cheese") {
+          print("The Warden accepts the cheese with the solemnity of a ritual long anticipated.", "normal");
+          print("\"This,\" she says, \"is the correct amount of cheese.\"", "normal");
+          print("She issues you a toll ticket from a pad she produces from her coat pocket.", "normal");
+        } else {
+          print("The Warden accepts it, chewing thoughtfully.", "normal");
+          print("She issues you a toll ticket.", "normal");
+        }
+        removeFromInventory(item);
+        addToInventory("bridge_toll_ticket");
+        G.flags.warden_paid = true;
+        G.flags.bridge_locked = false;
+        addScore(10);
+        print("You receive: <b>Bridge Toll Ticket</b>", "loot");
+        setHint("The bridge is now open. Head NORTH.");
+      } else {
+        print("\"That's not food,\" says the Warden. \"At least, not in the sense I mean.\"", "normal");
+      }
+    }
+  },
+
+  mushroom: {
+    location: "uncertain_forest",
+    name: "the Mushroom",
+    talk: function() {
+      var lines = [
+        "\"Are you certain you exist?\" asks the mushroom. \"Only asking.\"",
+        "\"Delivery,\" says the mushroom. \"How interesting. To impose significance upon an object and then carry it across space. Very human.\"",
+        "\"The wizard's experiments have given me a great deal to think about,\" says the mushroom. \"Mostly: what is thinking.\"",
+        "\"I once knew a man who delivered letters,\" says the mushroom. \"He never stopped to ask what they meant. I wonder if that was wisdom or merely employment.\""
+      ];
+      if (!G.flags.mushroom_talked) {
+        G.flags.mushroom_talked = true;
+        print(lines[0], "normal");
+        print("The mushroom blinks. You did not know mushrooms could blink.", "normal");
+        print("\"The monk in the clearing could help you,\" it adds. \"He has answers. He just prefers not to give them without first giving you the question.\"", "normal");
+        setHint("The mushroom is edible and... philosophically nutritious. Try TAKE MUSHROOM.");
+      } else {
+        print(lines[Math.floor(Math.random() * lines.length)], "normal");
+      }
+    }
+  },
+
+  wizard: {
+    location: "wizards_clearing",
+    name: "the Wizard",
+    talk: function() {
+      if (!G.flags.wizard_talked) {
+        G.flags.wizard_talked = true;
+        print("The Wizard looks up from his diagram. His eyebrows are independently mobile.", "normal");
+        print("\"Ah. A visitor. Don't stand in the east quadrant — that's where we lost Gerald. Well. We didn't lose him, exactly. He's still there. Just at a different frequency.\"", "normal");
+        print("He rolls up the diagram.", "normal");
+        print("\"You're going to Mudwick? Brave. Or uninformed. Usually the same thing. The Mayor won't accept your delivery without his seal — he lost it in a bet with the raven last spring. The raven is not a good loser, so it keeps winning.\"", "normal");
+        print("He pauses.", "normal");
+        print("\"You'll need to outwit the raven. It responds to cleverness. Or cheese. I forget which.\"", "normal");
+        setHint("The raven has the Mayor's seal. Talk to the monk too.");
+      } else {
+        print("\"Still here?\" says the Wizard. \"Gerald says hello, incidentally. He's fine. He's just... adjacent.\"", "normal");
+      }
+    }
+  },
+
+  monk: {
+    location: "wizards_clearing",
+    name: "Brother Flemwick",
+    talk: function() {
+      if (!G.flags.monk_talked) {
+        G.flags.monk_talked = true;
+        print("The monk opens one eye.", "normal");
+        print("\"I am Brother Flemwick of the Order of Productive Uncertainty,\" he says. \"We have taken a vow to answer every question with a better question. Are you sure you want to speak to me?\"", "normal");
+        print("You say yes.", "normal");
+        print("He opens the other eye.", "normal");
+        print("\"Then I will give you this.\" He hands you a folded piece of paper. \"It is the answer to a question you have not yet asked. But when you ask it — and you will — you will find the answer is already with you.\"", "normal");
+        print("He closes both eyes again.", "normal");
+        addToInventory("monks_answer");
+        G.flags.monk_talked = true;
+        addScore(5);
+        print("You receive: <b>Brother Flemwick's Answer (Sealed)</b>", "loot");
+        setHint("What question does the monk's answer address? Perhaps the dragon will know.");
+      } else {
+        print("\"Have you asked the question yet?\" asks the monk.", "normal");
+        print("You admit you haven't.", "normal");
+        print("\"That,\" he says, \"is the most honest thing anyone has said to me in a decade.\"", "normal");
+      }
+    }
+  },
+
+  dragon: {
+    location: "mill_road",
+    name: "the Dragon",
+    talk: function() {
+      if (!G.flags.dragon_locked) {
+        print("\"You may pass,\" rumbles the dragon. \"Your errand was assessed. Marginally significant.\"", "normal");
+        print("It sounds almost disappointed.", "normal");
+      } else {
+        print("\"I guard this road by contractual obligation,\" the dragon says. \"The contract expired in 1842. No one has filed the paperwork to dissolve it. I find this fitting.\"", "normal");
+        print("\"Show me the item. I will assess whether your errand merits passage.\"", "normal");
+        setHint("SHOW LETTER to the dragon.");
+      }
+    },
+    show: function(item) {
+      if (item === "letter") {
+        if (!G.flags.dragon_assessed) {
+          skillCheck(
+            "Dragon Assessment",
+            "The dragon examines the letter with the focused attention of something that has assessed eleven thousand objects and found most of them disappointing.",
+            "CUNNING", 12,
+            function(success) {
+              if (success) {
+                G.flags.dragon_assessed = true;
+                G.flags.dragon_locked = false;
+                addToInventory("dragon_receipt");
+                addScore(15);
+                print("The dragon regards the letter for a long, geological moment.", "normal");
+                print("\"Hmm,\" it says at last. \"The seal is authentic. The wax is of the Regret variety — Grade Two, post-reform. The address is written in Consequences Ink.\" It pauses. \"This letter is of Marginal Significance. Slightly above average. You may pass.\"", "normal");
+                print("It hands back the letter and issues a receipt.", "normal");
+                print("You receive: <b>Dragon Consultation Receipt</b>", "loot");
+                setHint("The road to Mudwick is clear. Head NORTH.");
+              } else {
+                G.hp = Math.max(1, G.hp - 3);
+                print("The dragon sighs, and a small amount of fire escapes. It singes your trousers.", "combat");
+                print("\"Insufficient.\" it says. \"Come back when you look more official.\"", "normal");
+                print("You take 3 stamina damage from a professional sigh.", "combat");
+                updateStats();
+                setHint("Try again, or find something that makes you seem more official. Do you have a rubber stamp?");
+              }
+            }
+          );
+        } else {
+          print("\"You've already been assessed,\" says the dragon. \"I keep records. Move along.\"", "normal");
+        }
+      } else {
+        print("The dragon looks at your offering. \"That is not a delivery item,\" it says. \"I assess deliveries. Please come back with the appropriate object.\"", "normal");
+      }
+    }
+  },
+
+  raven: {
+    location: "village_square",
+    name: "the Raven",
+    talk: function() {
+      if (G.flags.raven_defeated) {
+        print("The raven ignores you with renewed dedication.", "normal");
+        return;
+      }
+      if (!G.flags.raven_talked) {
+        G.flags.raven_talked = true;
+        print("The raven tilts its head. It has the kind of eyes that suggest a rich interior life and no intention of sharing it.", "normal");
+        print("\"You want the Mayor's seal,\" it says.", "normal");
+        print("You ask how it knows that.", "normal");
+        print("\"Because everyone wants something from me and it's always either the seal or information about the seal. The Mayor lost it fairly. I won it fairly. I keep it for the same reason I keep everything — because I can.\"", "normal");
+        print("It preens a feather with the calm of the truly inconvenient.", "normal");
+        print("\"You can have it if you can answer my riddle. Or outwit me. Or give me something interesting. I leave the approach to you.\"", "normal");
+        setHint("RIDDLE to take the raven's challenge, or try GIVE [item] to the raven.");
+      } else if (!G.flags.raven_riddle) {
+        print("\"Still here?\" asks the raven. \"Type RIDDLE if you want to try my challenge. Or give me something worth my time.\"", "normal");
+      }
+    },
+    riddle: function() {
+      if (G.flags.raven_defeated) {
+        print("\"You've already won,\" says the raven, with the manner of someone who has not forgotten.", "normal");
+        return;
+      }
+      G.flags.raven_riddle = true;
+      print("The raven stretches its wings.", "normal");
+      print("\"Very well. My riddle:\"", "normal");
+      print("\"I am carried but never held. I am sealed but speak volumes. I am sent to the living but written for the dead. What am I?\"", "normal");
+      print("", "normal");
+      print("Type your answer: ANSWER [word]", "system");
+      setHint("Think carefully. What is carried, sealed, and sent to the living but written for the dead?");
+    },
+    give: function(item) {
+      if (G.flags.raven_defeated) {
+        print("\"I already gave you the seal,\" says the raven. \"Your generosity is noted. And unnecessary.\"", "normal");
+        return;
+      }
+      if (item === "monks_answer") {
+        print("The raven takes the sealed paper. It opens it with one talon.", "normal");
+        print("It reads. A long silence follows.", "normal");
+        print("\"...Oh,\" it says.", "normal");
+        print("Another silence.", "normal");
+        print("\"That's the answer to the question I've been sitting on for eleven years.\" It drops the Mayor's seal on the rim of the well. \"Take it. I need to think.\"", "normal");
+        removeFromInventory("monks_answer");
+        addToInventory("mayors_seal");
+        G.flags.raven_defeated = true;
+        G.flags.has_seal = true;
+        addScore(20);
+        print("You receive: <b>Mayor's Official Seal</b>", "loot");
+        setHint("You have the seal! Return to the Mayor at the village gate (go SOUTH) and TALK TO MAYOR.");
+      } else if (item === "raven_feather") {
+        print("\"My own feather,\" says the raven. \"Returned. This is either a philosophical gesture or you're very confused.\" It drops the Mayor's seal. \"Fine. It's sufficiently interesting.\"", "normal");
+        removeFromInventory("raven_feather");
+        addToInventory("mayors_seal");
+        G.flags.raven_defeated = true;
+        G.flags.has_seal = true;
+        addScore(20);
+        print("You receive: <b>Mayor's Official Seal</b>", "loot");
+        setHint("You have the seal! Return to the Mayor at the village gate (go SOUTH) and TALK TO MAYOR.");
+      } else {
+        print("The raven inspects your offering with professional disdain.", "normal");
+        print("\"Bring me something interesting,\" it says. \"Or answer my riddle.\"", "normal");
+      }
+    }
+  },
+
+  mayor: {
+    location: "mudwick_gate",
+    name: "the Mayor",
+    talk: function() {
+      if (G.flags.delivery_complete) {
+        print("The Mayor adjusts his chain of office. \"Wonderful weather,\" he says. \"Or it will be, once someone files for it.\"", "normal");
+        return;
+      }
+      if (!G.flags.mayor_talked) {
+        G.flags.mayor_talked = true;
+        print("The Mayor straightens his chain of office with the air of a man who has been practicing this.", "normal");
+        print("\"A delivery,\" he says. \"For Mudwick. In my thirty years as Mayor I have received three deliveries. One was a tax bill. One was an apology for the first tax bill. And the third was a second tax bill that apologized for the apology.\"", "normal");
+        print("He regards your letter.", "normal");
+        print("\"I cannot accept this delivery without the Official Seal of Delivery. The Seal authorises all received parcels, letters, and documents of Moderate to Extreme Significance. The Seal is—\" He pauses. \"—temporarily not on my person.\"", "normal");
+        print("He has the air of a man who knows exactly where the seal is and finds the fact deeply embarrassing.", "normal");
+        setHint("Find the Mayor's Seal. The raven in the village square has it.");
+      } else if (G.flags.has_seal && !G.flags.mayor_signed) {
+        print("The Mayor sees the seal. Something in him relaxes that has been tense for eleven months.", "normal");
+        print("\"My seal,\" he says. \"Excellent. I will now authorise your delivery.\" He takes it, stamps your delivery form with considerable ceremony, and hands it back. \"Official. Authorised. Filed.\"", "normal");
+        print("He pauses.", "normal");
+        print("\"You may proceed to Number One, Cobble End. Knock twice. Wait.\"", "normal");
+        G.flags.mayor_signed = true;
+        addScore(15);
+        setHint("Head to Cobble End — WEST from the village square — and DELIVER LETTER.");
+      } else if (!G.flags.has_seal) {
+        print("\"The seal,\" says the Mayor. \"Find the seal. It's with—\" He pauses. \"—find it.\"", "normal");
+      } else {
+        print("\"You have everything you need,\" says the Mayor. \"Go to Cobble End.\"", "normal");
+      }
+    }
+  },
+
+  shopkeeper: {
+    location: "village_shop",
+    name: "the Shopkeeper",
+    talk: function() {
+      print("The shopkeeper regards you over a pair of spectacles that seem to be there for emphasis rather than vision.", "normal");
+      print("\"We have what you need,\" she says. \"Whether what you need is what you want is between you and a competent philosopher. The tincture's on the shelf. It restores stamina. Or it restores the concept of stamina. The distinction is mostly semantic by the time you need it.\"", "normal");
+    }
+  }
+};
+
+// ════════════════════════════════════════════════════════
+//  PARSER
+// ════════════════════════════════════════════════════════
+
+function parseCommand(raw) {
+  var input = raw.trim().toLowerCase();
+  if (!input) return;
+
+  G.moves++;
+  updateStats();
+  print("> " + raw.trim(), "input-echo");
+
+  // Split into verb + rest
+  var parts = input.split(/\s+/);
+  var verb = parts[0];
+  var rest = parts.slice(1).join(" ");
+
+  // Navigation shortcuts
+  var dirs = { "n": "north", "s": "south", "e": "east", "w": "west",
+                "north": "north", "south": "south", "east": "east", "west": "west" };
+
+  if (dirs[verb]) { cmdGo(dirs[verb]); return; }
+
+  switch(verb) {
+    case "go":        cmdGo(rest); break;
+    case "move":      cmdGo(rest); break;
+    case "walk":      cmdGo(rest); break;
+    case "head":      cmdGo(rest); break;
+    case "look":      cmdLook(rest); break;
+    case "l":         cmdLook(rest); break;
+    case "examine":   cmdExamine(rest); break;
+    case "x":         cmdExamine(rest); break;
+    case "read":      cmdExamine(rest); break;
+    case "take":      cmdTake(rest); break;
+    case "get":       cmdTake(rest); break;
+    case "pick":      cmdTake(rest.replace(/^up\s*/,"")); break;
+    case "drop":      cmdDrop(rest); break;
+    case "inventory": cmdInventory(); break;
+    case "inv":       cmdInventory(); break;
+    case "i":         cmdInventory(); break;
+    case "talk":      cmdTalk(rest.replace(/^to\s*/,"")); break;
+    case "speak":     cmdTalk(rest.replace(/^to\s*/,"")); break;
+    case "give":      cmdGive(rest); break;
+    case "show":      cmdShow(rest); break;
+    case "use":       cmdUse(rest); break;
+    case "drink":     cmdDrink(rest); break;
+    case "eat":       cmdEat(rest); break;
+    case "fight":     cmdFight(); break;
+    case "attack":    cmdFight(); break;
+    case "flee":      cmdFlee(); break;
+    case "run":       cmdFlee(); break;
+    case "outwit":    cmdOutwit(); break;
+    case "trick":     cmdOutwit(); break;
+    case "knock":     cmdKnock(); break;
+    case "deliver":   cmdDeliver(); break;
+    case "riddle":    cmdRiddle(); break;
+    case "answer":    cmdAnswer(rest); break;
+    case "stamp":     cmdStamp(); break;
+    case "open":      cmdOpen(rest); break;
+    case "help":      cmdHelp(); break;
+    case "h":         cmdHelp(); break;
+    case "?":         cmdHelp(); break;
+    case "save":      saveGame(); break;
+    case "load":      loadGame(); break;
+    case "score":     print("Your current score is " + G.score + " points. Moves: " + G.moves + ".", "system"); break;
+    case "quit":      print("The Consortium thanks you for your service. Your resignation has been filed under 'Q'. Type SAVE first if you'd like to resume later.", "system"); break;
+    case "wait":      print("Time passes. Nothing particularly happens. This is, philosophically, identical to everything else.", "system"); break;
+    case "z":         print("Time passes. Nothing particularly happens. This is, philosophically, identical to everything else.", "system"); break;
+    case "north": case "south": case "east": case "west": cmdGo(verb); break;
+    default:
+      var snarks = [
+        "The Consortium's Field Manual does not cover that. Try HELP.",
+        "That is not in the regulations.",
+        "Unclear. Please rephrase in standard postal terminology.",
+        "The Omnipotent Postal Consortium has no protocol for that.",
+        "I'm not sure what you mean. Have you tried HELP?"
+      ];
+      print(snarks[Math.floor(Math.random() * snarks.length)], "error");
+  }
+
+  autoSave();
+}
+
+function cmdGo(dir) {
+  if (G.combat) {
+    print("You can't walk away mid-encounter. The " + G.combat.name + " would take that personally.", "error");
+    print("FIGHT  |  OUTWIT  |  FLEE", "system");
+    return;
+  }
+  dir = dir.trim().toLowerCase();
+  var dirMap = { "n": "north", "s": "south", "e": "east", "w": "west" };
+  if (dirMap[dir]) dir = dirMap[dir];
+
+  var room = ROOMS[G.location];
+  if (!room.exits[dir]) {
+    var noExit = [
+      "You cannot go that way. The universe declines to cooperate.",
+      "There is nothing in that direction except increasing disappointment.",
+      "The Consortium has not approved a route in that direction."
+    ];
+    print(noExit[Math.floor(Math.random() * noExit.length)], "error");
+    return;
+  }
+
+  var dest = room.exits[dir];
+  var destRoom = ROOMS[dest];
+
+  // Bridge blocks entry (warden stops you before you cross)
+  if (destRoom.locked && G.flags[destRoom.locked]) {
+    print(destRoom.lockMsg, "normal");
+    return;
+  }
+
+  G.location = dest;
+  describeRoom(true);
+
+  // Dragon: you enter mill_road fine; dragon introduces itself on first visit
+  if (dest === "mill_road" && !G.flags.dragon_talked && G.flags.dragon_locked) {
+    print("", "divider");
+    print("The dragon shifts one enormous eye toward you. \"Official business,\" it says, in a voice like a slow avalanche. \"I'll need to assess the significance of your errand. Leave the item in question on the rock.\" It gestures to a flat stone with a claw. This is, apparently, normal.", "normal");
+    G.flags.dragon_talked = true;
+    setHint("TALK TO DRAGON or SHOW LETTER to the dragon.");
+  }
+
+  // Mayor: spots the seal automatically if you're carrying it
+  if (dest === "mudwick_gate" && G.flags.has_seal && !G.flags.mayor_signed) {
+    print("", "divider");
+    print("The Mayor's eyes go immediately to the seal. His chain of office makes a small sound of relief.", "normal");
+    print("\"That's— yes. That's my seal.\" He produces a stamp from somewhere inside his robes. \"Allow me to make this official.\"", "normal");
+    print("He stamps your delivery form with considerable ceremony.", "normal");
+    print("\"Authorised. Filed. You may proceed to Number One, Cobble End. Knock twice. Wait.\"", "normal");
+    G.flags.mayor_signed = true;
+    addScore(15);
+    setHint("Head into the village (NORTH), then WEST to Cobble End. DELIVER LETTER.");
+  }
+
+  // Wandering goblin check
+  checkWanderingGoblin();
+}
+
+function cmdLook(target) {
+  if (!target || target === "around" || target === "room") {
+    describeRoom(false);
+  } else {
+    cmdExamine(target);
+  }
+}
+
+function describeRoom(isEnter) {
+  var room = ROOMS[G.location];
+  print("", "divider");
+  print("— " + room.name.toUpperCase() + " —", "location");
+  print(room.desc, "normal");
+
+  // List items on floor
+  if (room.items && room.items.length > 0) {
+    var visible = room.items.filter(function(it) { return ITEMS[it]; });
+    if (visible.length > 0) {
+      var names = visible.map(function(it) { return ITEMS[it].name; });
+      print("You can see here: " + names.join(", ") + ".", "system");
+    }
+  }
+
+  if (room.hint) setHint(room.hint);
+  updateStats();
+}
+
+function cmdExamine(target) {
+  if (!target) { print("Examine what, specifically?", "error"); return; }
+
+  target = target.toLowerCase().replace(/^the\s+/, "");
+
+  // Check inventory first
+  var invMatch = findInInventory(target);
+  if (invMatch) {
+    print(ITEMS[invMatch].desc, "normal");
+    return;
+  }
+
+  // Check room items
+  var room = ROOMS[G.location];
+  if (room.items) {
+    for (var i = 0; i < room.items.length; i++) {
+      if (itemMatches(room.items[i], target)) {
+        print(ITEMS[room.items[i]].desc, "normal");
+        return;
+      }
+    }
+  }
+
+  // Special examines
+  var specials = {
+    "letter": function() { if (hasItem("letter")) { print(ITEMS["letter"].desc, "normal"); } else { print("You don't have the letter.", "error"); } },
+    "warden": function() { print("A woman of indeterminate age and absolute authority. She has the look of someone who has heard every excuse, filed them all, and found them inadequate.", "normal"); },
+    "dragon": function() { print("A dragon of middling size and considerable self-awareness. It has the look of a creature that knows it is doing something contractually obligatory rather than genuinely menacing, and has mixed feelings about this.", "normal"); },
+    "raven": function() { print("A large black raven of the sort that suggests it has read more books than you and retains more of what it read. Its feathers are immaculate. Beside it on the well sits a small brass disc — the Mayor's seal, apparently.", "normal"); if (!hasItem("raven_feather") && !G.flags.raven_feather_taken) { print("A single feather lies on the ground below the well.", "system"); } },
+    "well": function() { print("A stone well. The rope is present. The bucket is absent. This has been the case for some years.", "normal"); },
+    "monk": function() { print("A man in grey robes, sitting with the practised stillness of someone who has elevated doing nothing into a discipline.", "normal"); },
+    "wizard": function() { print("A wizard of the older school — the school that believed academic soot was a sign of productive work and that eyebrows were an optional feature.", "normal"); },
+    "mayor": function() { print("A man of ceremonial importance and genuine anxiety. His chain of office is the heaviest thing about him, and it is not especially heavy.", "normal"); },
+    "mushroom": function() { if (G.location === "uncertain_forest" || hasItem("mushroom")) { print("A large mushroom with a distinctly philosophical air. It is paying attention.", "normal"); } else { print("You don't see a mushroom here.", "error"); } },
+    "sign": function() { print("Whatever sign is nearby, it says exactly what you'd expect, in a tone that suggests it has stopped hoping you'll listen.", "normal"); },
+    "cheese": function() { if (G.location === "kings_road" || hasItem("cheese")) { print(ITEMS["cheese"].desc, "normal"); } else { print("No cheese here.", "error"); } }
+  };
+
+  for (var k in specials) {
+    if (target.indexOf(k) !== -1) { specials[k](); return; }
+  }
+
+  // Feather on ground
+  if ((target.indexOf("feather") !== -1) && G.location === "village_square" && !G.flags.raven_feather_taken && !hasItem("raven_feather")) {
+    print("A glossy black feather, dropped by the raven. It seems like the sort of thing that might be significant.", "normal");
+    return;
+  }
+
+  print("You examine it carefully. It remains exactly what it appears to be, which is either reassuring or suspicious.", "system");
+}
+
+function cmdTake(target) {
+  if (!target) { print("Take what?", "error"); return; }
+  target = target.toLowerCase().replace(/^the\s+/, "");
+
+  var room = ROOMS[G.location];
+
+  // Special: feather in village square
+  if ((target.indexOf("feather") !== -1) && G.location === "village_square" && !G.flags.raven_feather_taken && !hasItem("raven_feather")) {
+    addToInventory("raven_feather");
+    G.flags.raven_feather_taken = true;
+    print("You pick up the raven feather. The raven notices. It does not look pleased, but it also does not look surprised.", "success");
+    addScore(2);
+    return;
+  }
+
+  if (room.items) {
+    for (var i = 0; i < room.items.length; i++) {
+      if (itemMatches(room.items[i], target)) {
+        var key = room.items[i];
+        if (!ITEMS[key].takeable) {
+          print("You can't take that.", "error"); return;
+        }
+        addToInventory(key);
+        room.items.splice(i, 1);
+        print("Taken: " + ITEMS[key].name, "success");
+        addScore(2);
+        return;
+      }
+    }
+  }
+
+  if (findInInventory(target)) {
+    print("You already have that.", "system"); return;
+  }
+  print("You can't see that here.", "error");
+}
+
+function cmdDrop(target) {
+  if (!target) { print("Drop what?", "error"); return; }
+  target = target.toLowerCase().replace(/^the\s+/, "");
+  var key = findInInventory(target);
+  if (!key) { print("You're not carrying that.", "error"); return; }
+  removeFromInventory(key);
+  ROOMS[G.location].items = ROOMS[G.location].items || [];
+  ROOMS[G.location].items.push(key);
+  print("Dropped: " + ITEMS[key].name, "system");
+}
+
+function cmdInventory() {
+  if (G.inventory.length === 0) {
+    print("You are carrying nothing. This is the lightest your burdens have been in years.", "system");
+    return;
+  }
+  print("You are carrying:", "system");
+  G.inventory.forEach(function(k) {
+    print("  — " + ITEMS[k].name, "normal");
+  });
+}
+
+function cmdTalk(target) {
+  if (!target) { print("Talk to whom?", "error"); return; }
+  target = target.toLowerCase().replace(/^the\s+/, "");
+
+  var charFound = findCharacterInRoom(target);
+  if (charFound) {
+    CHARACTERS[charFound].talk();
+    return;
+  }
+  print("There's no one by that description here to talk to.", "error");
+}
+
+function cmdGive(input) {
+  // GIVE [item] TO [char] or GIVE [item]
+  var parts = input.split(/\s+to\s+/i);
+  var itemStr = parts[0].trim().replace(/^the\s+/, "");
+  var charStr = parts[1] ? parts[1].trim().replace(/^the\s+/, "") : null;
+
+  var itemKey = findInInventory(itemStr);
+  if (!itemKey) { print("You're not carrying that.", "error"); return; }
+
+  // If no char specified, try obvious character in room
+  if (!charStr) {
+    var chars = getCharsInRoom();
+    if (chars.length === 1) { charStr = chars[0]; }
+    else if (chars.length > 1) { print("Give it to whom?", "error"); return; }
+    else { print("There's no one here to give things to.", "error"); return; }
+  }
+
+  var charKey = findCharacterInRoom(charStr);
+  if (!charKey) { print("That person isn't here.", "error"); return; }
+
+  if (CHARACTERS[charKey].give) {
+    CHARACTERS[charKey].give(itemKey);
+  } else {
+    print("They don't seem to want that.", "system");
+  }
+}
+
+function cmdShow(input) {
+  // SHOW [item] TO [char]
+  var parts = input.split(/\s+to\s+/i);
+  var itemStr = parts[0].trim().replace(/^the\s+/, "");
+
+  var itemKey = findInInventory(itemStr);
+  if (!itemKey) { print("You're not carrying that.", "error"); return; }
+
+  // Dragon special case
+  if (G.location === "mill_road" && CHARACTERS.dragon) {
+    CHARACTERS.dragon.show(itemKey);
+    return;
+  }
+
+  print("You show it around. No one seems particularly moved.", "system");
+}
+
+function cmdUse(target) {
+  target = (target || "").toLowerCase().replace(/^the\s+/, "");
+
+  if (target.indexOf("stamp") !== -1 && hasItem("rubber_stamp")) {
+    cmdStamp(); return;
+  }
+  if ((target.indexOf("lamp") !== -1 || target.indexOf("lantern") !== -1 || target.indexOf("light") !== -1) && hasItem("lamp")) {
+    print("You wave the lamp around. Everything it illuminates looks better for being lit, even if only slightly.", "system"); return;
+  }
+  if (target.indexOf("potion") !== -1 || target.indexOf("tincture") !== -1) {
+    cmdDrink("potion"); return;
+  }
+  if (target.indexOf("letter") !== -1) {
+    if (G.location === "cobble_end" && G.flags.mayor_signed) {
+      cmdDeliver(); return;
+    }
+    print("You hold up the letter. It remains sealed. This is appropriate.", "system"); return;
+  }
+  print("Using it yields no obvious result. The universe remains unmoved.", "system");
+}
+
+function cmdDrink(target) {
+  target = (target || "").toLowerCase();
+  var key = null;
+  if (target.indexOf("potion") !== -1 || target.indexOf("tincture") !== -1 || target.indexOf("restor") !== -1) {
+    key = "potion";
+  } else {
+    key = findInInventory(target);
+  }
+  if (!key || !hasItem(key)) { print("You don't have that.", "error"); return; }
+  if (key === "potion") {
+    var restored = Math.min(6, G.maxHp - G.hp);
+    G.hp = Math.min(G.maxHp, G.hp + 6);
+    removeFromInventory("potion");
+    print("You drink the tincture. It tastes of copper and morning. You feel considerably more alive.", "success");
+    print("Stamina restored by 6 points.", "success");
+    updateStats();
+  } else {
+    print("You can't drink that. Probably.", "error");
+  }
+}
+
+function cmdEat(target) {
+  target = (target || "").toLowerCase();
+  if (target.indexOf("cheese") !== -1 && hasItem("cheese")) {
+    G.hp = Math.min(G.maxHp, G.hp + 3);
+    removeFromInventory("cheese");
+    print("You eat the cheese. It tastes of mild triumph. Stamina +3.", "success");
+    updateStats();
+  } else if (target.indexOf("mushroom") !== -1 && hasItem("mushroom")) {
+    G.hp = Math.min(G.maxHp, G.hp + 2);
+    removeFromInventory("mushroom");
+    G.flags.mushroom_safe = true;
+    print("You eat the mushroom. It tastes of existential clarity. For about eight seconds you understand everything. Then it passes. Stamina +2.", "success");
+    updateStats();
+  } else {
+    print("The Consortium does not recommend eating that.", "error");
+  }
+}
+
+function cmdKnock() {
+  if (G.location !== "cobble_end") {
+    print("There's nothing here worth knocking on.", "error"); return;
+  }
+  if (!G.flags.mayor_signed) {
+    print("You knock. There is no response. The door is not the problem — the delivery form isn't officially authorised yet.", "system");
+    setHint("Get the Mayor's official stamp first. He's at the village gate.");
+    return;
+  }
+  cmdDeliver();
+}
+
+function cmdDeliver() {
+  if (G.location !== "cobble_end") {
+    print("You're not at the delivery address.", "error"); return;
+  }
+  if (!hasItem("letter")) {
+    print("You don't have the letter.", "error"); return;
+  }
+  if (!G.flags.mayor_signed) {
+    print("The delivery form hasn't been officially authorised. The Mayor needs to stamp it first.", "system");
+    setHint("Find the Mayor at the village gate.");
+    return;
+  }
+
+  // Final skill check
+  skillCheck(
+    "The Delivery",
+    "You stand at the door of Number One, Cobble End. This is the moment. You have crossed a dry river, outwitted a raven, negotiated with a dragon, and received the answer to a question you still haven't asked. You knock. Twice. You wait.",
+    "NERVE", 10,
+    function(success) {
+      if (success) {
+        finalDelivery();
+      } else {
+        print("Your nerve fails you at the last moment. You knock too quietly. Nothing happens.", "combat");
+        print("You gather yourself. Try again — KNOCK or DELIVER LETTER.", "system");
+        G.hp = Math.max(1, G.hp - 1);
+        updateStats();
+      }
+    }
+  );
+}
+
+function finalDelivery() {
+  G.flags.delivery_complete = true;
+  removeFromInventory("letter");
+  addScore(50);
+  G.score += 0; // already added
+
+  print("", "divider");
+  print("The door opens.", "normal");
+  print("", "normal");
+  print("Not quickly. Not slowly. It opens in the manner of a door that has been waiting for this for eleven years and has practised the exact speed.", "normal");
+  print("", "normal");
+  print("The woman who answers is not Mr. Horace Dunt. She is, you estimate, seventy years old, and she has the look of someone who gave up expecting things to arrive and then quietly, privately, never stopped.", "normal");
+  print("", "normal");
+  print("\"Post,\" you say.", "normal");
+  print("", "normal");
+  print("She takes the letter. She examines the seal. Her face does several things in quick succession that would take a much longer story to fully describe.", "normal");
+  print("", "normal");
+  print("\"My husband,\" she says at last. \"He always said the post would come eventually.\"", "normal");
+  print("", "normal");
+  print("She closes the door. Gently.", "normal");
+  print("", "normal");
+  print("You stand on the path. The evening is coming in. Somewhere behind you, the dragon is reading a book. The monk is asking himself a question. The raven has received an answer it needed. The warden is considering whether the river might return.", "normal");
+  print("", "normal");
+  print("The Omnipotent Postal Consortium promises that the letter always arrives eventually.", "normal");
+  print("", "normal");
+  print("For certain values of eventually.", "normal");
+  print("", "divider");
+  print("— THE END —", "title");
+  print("", "normal");
+  print("FINAL SCORE: " + G.score + " points   |   MOVES: " + G.moves, "title");
+  print("", "normal");
+  print("Thank you for your service, Deliverer (Third Class, Provisional).", "system");
+  print("Your completion report has been filed. Eventually.", "system");
+  updateStats();
+  setHint("Congratulations. You may now start a new game or simply sit with it for a moment.");
+  document.getElementById("s-letter").textContent = "DELIVERED";
+  document.getElementById("s-letter").style.color = "var(--green)";
+}
+
+function cmdRiddle() {
+  if (G.location !== "village_square") {
+    print("There's no riddle to answer here.", "error"); return;
+  }
+  if (CHARACTERS.raven) {
+    CHARACTERS.raven.riddle();
+  }
+}
+
+function cmdAnswer(answer) {
+  if (!G.flags.raven_riddle) {
+    print("There's no riddle pending.", "error"); return;
+  }
+  if (G.flags.raven_defeated) {
+    print("The raven already gave you the seal.", "system"); return;
+  }
+
+  answer = answer.trim().toLowerCase();
+  var correct = ["letter", "a letter", "the letter", "letters"];
+  if (correct.indexOf(answer) !== -1) {
+    print("The raven is very still.", "normal");
+    print("\"...Correct,\" it says, in the tone of a creature that expected to say something else.", "normal");
+    print("It drops the Mayor's Seal onto the rim of the well.", "normal");
+    addToInventory("mayors_seal");
+    G.flags.raven_defeated = true;
+    G.flags.has_seal = true;
+    addScore(20);
+    print("You receive: <b>Mayor's Official Seal</b>", "loot");
+    setHint("Take the seal to the Mayor at the village gate.");
+  } else {
+    skillCheck(
+      "Wrong Answer",
+      "The raven tilts its head. \"Wrong,\" it says. \"But you said it with such conviction. That's almost something.\" It flaps at you aggressively.",
+      "NERVE", 8,
+      function(success) {
+        if (success) {
+          print("You hold your ground. The raven backs off, impressed despite itself.", "normal");
+          print("\"Try again,\" it says. \"Think harder.\"", "normal");
+        } else {
+          var dmg = 2;
+          G.hp = Math.max(1, G.hp - dmg);
+          print("The raven pecks you sharply. You take " + dmg + " stamina damage and a significant blow to your dignity.", "combat");
+          updateStats();
+        }
+      }
+    );
+  }
+}
+
+function cmdStamp() {
+  if (!hasItem("rubber_stamp")) {
+    print("You don't have a rubber stamp.", "error"); return;
+  }
+  print("You stamp the nearest available surface with considerable authority. RECEIVED, ACCEPTED, NOTED, REGRETTED, FILED, and QUERY are all applied.", "system");
+  if (G.location === "mill_road" && G.flags.dragon_locked) {
+    print("The dragon examines your documents with renewed interest. \"Properly stamped. I see. That's... actually in order.\" It steps aside with something approaching respect.", "normal");
+    G.flags.dragon_locked = false;
+    G.flags.dragon_assessed = true;
+    addToInventory("dragon_receipt");
+    addScore(10);
+    print("You receive: <b>Dragon Consultation Receipt</b>", "loot");
+    setHint("The road to Mudwick is clear. Head NORTH.");
+  }
+}
+
+function cmdOpen(target) {
+  if (target.indexOf("door") !== -1 && G.location === "cobble_end") {
+    cmdKnock(); return;
+  }
+  if (target.indexOf("letter") !== -1) {
+    print("The letter is sealed with official wax. Opening it would be a violation of Consortium regulations, common courtesy, and the implied trust between the living and the dead. You don't open it.", "system");
+    return;
+  }
+  print("You can't open that here.", "error");
+}
+
+function cmdHelp() {
+  print("", "divider");
+  print("DELIVERER'S FIELD MANUAL — COMMAND REFERENCE", "title");
+  print("MOVEMENT:  GO NORTH / SOUTH / EAST / WEST  (or just N/S/E/W)", "system");
+  print("LOOKING:   LOOK  |  EXAMINE [thing]  |  READ [thing]", "system");
+  print("ITEMS:     TAKE [item]  |  DROP [item]  |  INVENTORY (or I)", "system");
+  print("PEOPLE:    TALK TO [person]  |  GIVE [item] TO [person]  |  SHOW [item] TO [person]", "system");
+  print("ACTIONS:   USE [item]  |  EAT [item]  |  DRINK [item]  |  KNOCK  |  DELIVER LETTER", "system");
+  print("COMBAT:    FIGHT  |  OUTWIT  |  FLEE  (when a goblin appears)", "system");
+  print("SYSTEM:    SAVE  |  LOAD  |  SCORE  |  WAIT  |  HELP", "system");
+  print("", "divider");
+}
+
+// ════════════════════════════════════════════════════════
+//  COMBAT SYSTEM
+// ════════════════════════════════════════════════════════
+
+var GOBLINS = [
+  {
+    id: "goblin_postman",
+    name: "a Disgruntled Former Postman",
+    intro: "A figure lurches from behind a bush. He is wearing the remnants of a postal uniform — or possibly a postal uniform is wearing the remnants of him. His badge reads: FORMERLY GERALD. He has a grievance and a large stick.",
+    hp: 8, maxHp: 8, nerve: 2,
+    attacks: [
+      "swings his official stick with bureaucratic fury",
+      "attempts to stamp you with an expired VIOLATION notice",
+      "hurls a handful of undelivered mail at your face",
+      "reads out a formal complaint at considerable volume"
+    ],
+    outwits: [
+      "You mention that his pension was filed incorrectly and he is technically still employed. He stops mid-swing, deeply confused.",
+      "You produce the official delivery form. He squints at it. \"That's... that's Form 27-B.\" He lowers his stick. \"Filed in triplicate?\" You nod. He steps aside, muttering."
+    ],
+    loot: { item: "rubber_stamp", name: "a spare rubber stamp", chance: 0.5 },
+    deathMsg: "Gerald sits down heavily in the road. \"I just wanted acknowledgement,\" he says. \"Of my years of service.\" He is fine. He is just sitting.",
+    xp: 8
+  },
+  {
+    id: "goblin_taxman",
+    name: "a Revenue Goblin",
+    intro: "A small green creature in an ill-fitting waistcoat materialises on the path. It is carrying a clipboard and wearing the expression of something that has found its purpose and finds it deeply satisfying. 'TOLL,' it announces. 'Everything is a toll. Existence is a toll. This path has a toll. The toll for not paying the toll is also a toll.'",
+    hp: 6, maxHp: 6, nerve: 2,
+    attacks: [
+      "attempts to fine you for Unlicensed Travelling",
+      "raises a small but surprisingly heavy ledger",
+      "issues a formal notice of grievance directly to your shin",
+      "assesses you for Incidental Inconvenience Tax"
+    ],
+    outwits: [
+      "You tell it that you represent the Omnipotent Postal Consortium, which predates the concept of taxation. It checks its clipboard. This takes a while. It leaves.",
+      "You ask to see its licence. It produces one. You point out it expired in 1987. It stares at this for a long moment, then walks away very quickly."
+    ],
+    loot: { item: "potion", name: "a confiscated restorative tincture", chance: 0.6 },
+    deathMsg: "The Revenue Goblin files a final complaint and dissipates. The complaint will arrive eventually. For certain values of eventually.",
+    xp: 6
+  },
+  {
+    id: "goblin_confused",
+    name: "a Philosophically Confused Goblin",
+    intro: "A goblin sits in the middle of the path, staring at its hands. It looks up. 'Are YOU real?' it asks. Then it attacks you anyway, on the grounds that the question is moot if you're both here.",
+    hp: 7, maxHp: 7, nerve: 1,
+    attacks: [
+      "bites you while questioning the nature of pain",
+      "hits you with a rock, then apologises to the rock",
+      "tackles you with the energy of something that has nothing to lose",
+      "throws mud and wonders aloud if mud has feelings"
+    ],
+    outwits: [
+      "You ask whether it truly exists. It stops attacking to think about this. It is still thinking when you walk away.",
+      "You mention the mushroom near the forest. The goblin's eyes go wide. 'The mushroom SPEAKS?' It runs toward the forest immediately."
+    ],
+    loot: { item: "raven_feather", name: "a suspiciously shiny feather it was hoarding", chance: 0.4 },
+    deathMsg: "The goblin lies down. 'Perhaps,' it says, 'this was always going to happen.' It seems oddly at peace.",
+    xp: 7
+  },
+  {
+    id: "goblin_bureaucrat",
+    name: "a Goblin Bureaucrat",
+    intro: "This goblin is wearing three hats, which is one more than is reasonable and two more than is practical. It holds up a hand. 'This path requires a Form 19-C, a countersignature from the relevant authority, and proof of intention.' Then it draws a small sword.",
+    hp: 9, maxHp: 9, nerve: 3,
+    attacks: [
+      "demands your papers and then hits you with them",
+      "files a Motion to Strike, then strikes",
+      "reads aloud from a lengthy terms-and-conditions document while attacking",
+      "lodges a formal complaint directly against your ribs"
+    ],
+    outwits: [
+      "You produce the rubber stamp and stamp everything on its clipboard twice. It becomes overwhelmed by a feeling of profound completion and sits down.",
+      "You ask which department it reports to. It names four departments. You point out they were all dissolved in the restructuring of 1834. It staggers and retreats."
+    ],
+    loot: { item: "delivery_form", name: "a blank Form 19-C (useless but official-looking)", chance: 0.7 },
+    deathMsg: "The goblin bureaucrat falls, scattering papers everywhere. It reaches out a hand. 'At least,' it whispers, 'file me... correctly.' You probably won't.",
+    xp: 9
+  }
+];
+
+// Rooms where goblins may wander
+var GOBLIN_ZONES = ["kings_road", "bridge_approach", "uncertain_forest", "wizards_clearing", "far_bank", "mill_road"];
+var GOBLIN_CHANCE = 0.30; // 30% chance per move in a goblin zone
+
+function checkWanderingGoblin() {
+  if (G.combat) return;                          // already in combat
+  if (GOBLIN_ZONES.indexOf(G.location) === -1) return;
+  if (G.flags.delivery_complete) return;
+  if (Math.random() > GOBLIN_CHANCE) return;
+
+  // Pick a random goblin type
+  var goblinTemplate = GOBLINS[Math.floor(Math.random() * GOBLINS.length)];
+
+  // Clone it so HP is fresh each encounter
+  G.combat = {
+    id: goblinTemplate.id,
+    name: goblinTemplate.name,
+    hp: goblinTemplate.hp,
+    maxHp: goblinTemplate.maxHp,
+    nerve: goblinTemplate.nerve,
+    attacks: goblinTemplate.attacks,
+    outwits: goblinTemplate.outwits,
+    loot: goblinTemplate.loot,
+    deathMsg: goblinTemplate.deathMsg,
+    xp: goblinTemplate.xp
+  };
+
+  print("", "divider");
+  print("⚠ ENCOUNTER!", "combat");
+  print(goblinTemplate.intro, "normal");
+  print("", "normal");
+  print(G.combat.name + "  ·  Stamina: " + G.combat.hp + "/" + G.combat.maxHp, "combat");
+  print("", "normal");
+  print("What do you do?  FIGHT  |  OUTWIT  |  FLEE", "system");
+  setHint("FIGHT (NERVE check, deal damage), OUTWIT (CUNNING check, end combat cleverly), or FLEE (NERVE check, escape at a cost).");
+  updateCombatStats();
+}
+
+function updateCombatStats() {
+  if (G.combat) {
+    document.getElementById("s-letter").textContent = "⚔ " + G.combat.name;
+    document.getElementById("s-letter").style.color = "var(--red-light)";
+  } else {
+    document.getElementById("s-letter").textContent = G.flags.delivery_complete ? "DELIVERED" : "Undelivered";
+    document.getElementById("s-letter").style.color = G.flags.delivery_complete ? "var(--green)" : "";
+  }
+}
+
+function cmdFight() {
+  if (!G.combat) {
+    print("There is nothing here to fight. The road is peaceful. This is, arguably, worse.", "system");
+    return;
+  }
+  var enemy = G.combat;
+  skillCheck(
+    "FIGHT — " + enemy.name,
+    "You square up. The " + enemy.name + " raises its weapon. One of you is going to regret this. Probably both.",
+    "NERVE", 10,
+    function(success) {
+      if (success) {
+        var dmgDealt = Math.ceil(Math.random() * 4) + 2;
+        enemy.hp -= dmgDealt;
+        print("You land a solid blow! The " + enemy.name + " takes " + dmgDealt + " damage. (Remaining: " + Math.max(0, enemy.hp) + "/" + enemy.maxHp + ")", "success");
+        var attackLines = [
+          "It staggers but does not fall.",
+          "It looks annoyed, which is worse than it looking angry.",
+          "It shakes its head and redoubles its efforts.",
+          "It makes a sound of professional displeasure."
+        ];
+        if (enemy.hp > 0) {
+          enemyCounterAttack();
+        } else {
+          combatVictory();
+        }
+      } else {
+        print("Your attack goes wide. The " + enemy.name + " looks almost sympathetic.", "error");
+        enemyCounterAttack();
+      }
+    }
+  );
+}
+
+function enemyCounterAttack() {
+  var enemy = G.combat;
+  if (!enemy) return;
+  var dmg = Math.ceil(Math.random() * 3) + 1;
+  G.hp = Math.max(0, G.hp - dmg);
+  var attack = enemy.attacks[Math.floor(Math.random() * enemy.attacks.length)];
+  print("The " + enemy.name + " " + attack + ". You take " + dmg + " stamina damage.", "combat");
+  updateStats();
+  if (G.hp <= 0) {
+    combatDefeat();
+  } else {
+    print("Your stamina: " + G.hp + "/" + G.maxHp + "  ·  " + enemy.name + ": " + Math.max(0,enemy.hp) + "/" + enemy.maxHp, "system");
+    print("FIGHT  |  OUTWIT  |  FLEE", "system");
+  }
+}
+
+function cmdOutwit() {
+  if (!G.combat) {
+    print("There is no one here to outwit. You are, however, welcome to try outwitting yourself. Most people do.", "system");
+    return;
+  }
+  var enemy = G.combat;
+  skillCheck(
+    "OUTWIT — " + enemy.name,
+    "You decide that brawn is overrated and attempt to resolve this situation with wit, misdirection, or sheer bureaucratic authority.",
+    "CUNNING", 11,
+    function(success) {
+      if (success) {
+        var line = enemy.outwits[Math.floor(Math.random() * enemy.outwits.length)];
+        print(line, "success");
+        combatVictory(true);
+      } else {
+        print("Your clever remark lands with the impact of a damp invoice. The " + enemy.name + " is unimpressed.", "error");
+        enemyCounterAttack();
+      }
+    }
+  );
+}
+
+function cmdFlee() {
+  if (!G.combat) {
+    print("There is nothing to flee from. Running away from nothing is called a walk.", "system");
+    return;
+  }
+  var enemy = G.combat;
+  skillCheck(
+    "FLEE — " + enemy.name,
+    "You decide that discretion is the better part of valour, and valour is frankly overpriced.",
+    "NERVE", 9,
+    function(success) {
+      if (success) {
+        var dmg = Math.ceil(Math.random() * 2);
+        G.hp = Math.max(1, G.hp - dmg);
+        G.combat = null;
+        print("You make an undignified but effective exit, taking " + dmg + " damage on the way out.", "system");
+        print("The " + enemy.name + " shouts something after you. It is probably a fine.", "normal");
+        updateStats();
+        updateCombatStats();
+        setHint("You escaped. The goblin may or may not still be around. Be cautious.");
+      } else {
+        print("You trip over your own mail bag. The " + enemy.name + " catches up.", "error");
+        enemyCounterAttack();
+      }
+    }
+  );
+}
+
+function combatVictory(outwitted) {
+  var enemy = G.combat;
+  print("", "divider");
+  if (outwitted) {
+    print("✦ OUTWITTED! ✦", "success");
+  } else {
+    print("✦ VICTORY! ✦", "success");
+  }
+  print(enemy.deathMsg, "normal");
+  addScore(enemy.xp);
+  print("Score +" + enemy.xp, "loot");
+
+  // Loot drop
+  if (enemy.loot && Math.random() < enemy.loot.chance && !hasItem(enemy.loot.item)) {
+    addToInventory(enemy.loot.item);
+    print("You find: <b>" + enemy.loot.name + "</b>.", "loot");
+  } else {
+    // Always drop a small coin reward flavour
+    print("You find nothing of value on its person. This is consistent with its general outlook.", "system");
+  }
+
+  G.combat = null;
+  updateStats();
+  updateCombatStats();
+  setHint("Combat over. Type LOOK to get your bearings.");
+}
+
+function combatDefeat() {
+  var enemyName = G.combat ? G.combat.name : "creature";
+  G.combat = null;
+  print("", "divider");
+  print("✦ DEFEATED ✦", "combat");
+  print("You crumple. The world goes briefly dark.", "combat");
+  print("When you come to, the " + enemyName + " is gone. Your mail bag is intact — even petty criminals respect the post, apparently.", "normal");
+  print("A passing farmer drags you to the roadside and leaves you with some water and an opinion about your career choices.", "normal");
+  G.hp = Math.ceil(G.maxHp * 0.3);
+  print("You recover with " + G.hp + " stamina. Find something to eat or drink before pressing on.", "system");
+  updateStats();
+  updateCombatStats();
+  setHint("You were defeated. Find food or a tincture to restore stamina before the next encounter.");
+}
+
+
+
+function skillCheck(title, context, stat, target, callback) {
+  diceCallback = null;
+
+  var el = document.getElementById("dice-overlay");
+  var statVal = stat === "CUNNING" ? G.cunning : G.nerve;
+
+  document.getElementById("dice-title").textContent = title;
+  document.getElementById("dice-context").textContent = context + "\n\nRolling 2d10 + " + stat + " (" + statVal + ") vs Target " + target;
+  document.getElementById("dice-result-line").innerHTML = "";
+  document.getElementById("dice-continue-btn").style.display = "none";
+  document.getElementById("dice-roll-btn").style.display = "inline-block";
+  document.getElementById("die1").textContent = "?";
+  document.getElementById("die2").textContent = "?";
+  document.getElementById("die1").classList.remove("rolling");
+  document.getElementById("die2").classList.remove("rolling");
+
+  // Store roll params for when the button is pressed
+  el.dataset.stat = stat;
+  el.dataset.statVal = statVal;
+  el.dataset.target = target;
+
+  el.classList.add("active");
+
+  diceCallback = function(success) { callback(success); };
+}
+
+function diceRoll() {
+  var el = document.getElementById("dice-overlay");
+  var statVal = parseInt(el.dataset.statVal);
+  var target = parseInt(el.dataset.target);
+  var stat = el.dataset.stat;
+
+  document.getElementById("dice-roll-btn").style.display = "none";
+  document.getElementById("die1").classList.add("rolling");
+  document.getElementById("die2").classList.add("rolling");
+
+  var rolls = 0;
+  var maxRolls = 8;
+  var rollInterval = setInterval(function() {
+    document.getElementById("die1").textContent = Math.ceil(Math.random() * 10);
+    document.getElementById("die2").textContent = Math.ceil(Math.random() * 10);
+    rolls++;
+    if (rolls >= maxRolls) {
+      clearInterval(rollInterval);
+      var r1 = Math.ceil(Math.random() * 10);
+      var r2 = Math.ceil(Math.random() * 10);
+      document.getElementById("die1").textContent = r1;
+      document.getElementById("die2").textContent = r2;
+      document.getElementById("die1").classList.remove("rolling");
+      document.getElementById("die2").classList.remove("rolling");
+
+      var total = r1 + r2 + statVal;
+      var success = total >= target;
+      var resultEl = document.getElementById("dice-result-line");
+
+      resultEl.innerHTML =
+        "Rolled: " + r1 + " + " + r2 + " + " + stat + " (" + statVal + ") = <b>" + total + "</b><br>" +
+        "Target: " + target + "<br><br>" +
+        (success
+          ? "<span class=\"outcome-win\">✦ SUCCESS ✦</span>"
+          : "<span class=\"outcome-loss\">✦ FAILURE ✦</span>");
+
+      document.getElementById("dice-continue-btn").style.display = "inline-block";
+
+      var savedCallback = diceCallback;
+      diceCallback = function() { savedCallback(success); };
+    }
+  }, 80);
+}
+
+function diceContinue() {
+  document.getElementById("dice-overlay").classList.remove("active");
+  if (diceCallback) { diceCallback(); diceCallback = null; }
+}
+
+// ════════════════════════════════════════════════════════
+//  UTILITY FUNCTIONS
+// ════════════════════════════════════════════════════════
+
+function hasItem(key) { return G.inventory.indexOf(key) !== -1; }
+
+function addToInventory(key) {
+  if (!hasItem(key)) G.inventory.push(key);
+  updateInventoryDisplay();
+}
+
+function removeFromInventory(key) {
+  var idx = G.inventory.indexOf(key);
+  if (idx !== -1) G.inventory.splice(idx, 1);
+  updateInventoryDisplay();
+}
+
+function findInInventory(target) {
+  for (var i = 0; i < G.inventory.length; i++) {
+    if (itemMatches(G.inventory[i], target)) return G.inventory[i];
+  }
+  return null;
+}
+
+function itemMatches(key, target) {
+  if (!ITEMS[key]) return false;
+  var name = ITEMS[key].name.toLowerCase();
+  var t = target.toLowerCase().replace(/^the\s+/, "");
+  if (key.toLowerCase().indexOf(t) !== -1) return true;
+  if (name.indexOf(t) !== -1) return true;
+  // keyword matching
+  var words = t.split(/\s+/);
+  for (var i = 0; i < words.length; i++) {
+    if (words[i].length > 3 && name.indexOf(words[i]) !== -1) return true;
+    if (words[i].length > 3 && key.indexOf(words[i]) !== -1) return true;
+  }
+  return false;
+}
+
+function findCharacterInRoom(target) {
+  for (var k in CHARACTERS) {
+    var c = CHARACTERS[k];
+    if (c.location === G.location) {
+      var name = c.name.toLowerCase().replace(/^the\s+/, "");
+      var t = target.toLowerCase().replace(/^the\s+/, "");
+      if (name.indexOf(t) !== -1 || t.indexOf(k) !== -1 || k.indexOf(t) !== -1) return k;
+    }
+  }
+  return null;
+}
+
+function getCharsInRoom() {
+  var result = [];
+  for (var k in CHARACTERS) {
+    if (CHARACTERS[k].location === G.location) result.push(k);
+  }
+  return result;
+}
+
+function addScore(n) {
+  G.score += n;
+  updateStats();
+}
+
+// ════════════════════════════════════════════════════════
+//  OUTPUT / UI
+// ════════════════════════════════════════════════════════
+
+function print(text, type) {
+  type = type || "normal";
+  var out = document.getElementById("output");
+  var div = document.createElement("div");
+  div.className = "msg msg-" + type;
+  if (type === "divider") {
+    div.textContent = "────────────────────────────────────────────────────";
+  } else {
+    div.innerHTML = text;
+  }
+  out.appendChild(div);
+  out.scrollTop = out.scrollHeight;
+}
+
+function setHint(text) {
+  document.getElementById("hint-text").innerHTML = text;
+}
+
+function updateStats() {
+  var room = ROOMS[G.location];
+  document.getElementById("s-hp").textContent = G.hp + " / " + G.maxHp;
+  var hpEl = document.getElementById("s-hp");
+  hpEl.className = "stat-val " + (G.hp > 12 ? "hp-ok" : G.hp > 6 ? "hp-low" : "hp-crit");
+  document.getElementById("s-cunning").textContent = G.cunning;
+  document.getElementById("s-nerve").textContent = G.nerve;
+  document.getElementById("s-moves").textContent = G.moves;
+  document.getElementById("s-score").textContent = G.score;
+  document.getElementById("s-location").textContent = room ? room.shortName : "—";
+  updateInventoryDisplay();
+}
+
+function updateInventoryDisplay() {
+  var el = document.getElementById("inv-list");
+  if (G.inventory.length === 0) {
+    el.innerHTML = "<span class=\"inv-empty\">Nothing carried</span>";
+  } else {
+    el.innerHTML = G.inventory.map(function(k) {
+      return "<div class=\"inv-item\">" + (ITEMS[k] ? ITEMS[k].name : k) + "</div>";
+    }).join("");
+  }
+}
+
+// ════════════════════════════════════════════════════════
+//  SAVE / LOAD
+// ════════════════════════════════════════════════════════
+
+function saveGame() {
+  try {
+    var saveData = {
+      hp: G.hp, maxHp: G.maxHp, cunning: G.cunning, nerve: G.nerve,
+      inventory: G.inventory.slice(),
+      location: G.location, moves: G.moves, score: G.score,
+      flags: JSON.parse(JSON.stringify(G.flags)),
+      combat: G.combat ? JSON.parse(JSON.stringify(G.combat)) : null
+    };
+    // Save room item states
+    var roomItems = {};
+    for (var k in ROOMS) { roomItems[k] = (ROOMS[k].items || []).slice(); }
+    saveData.roomItems = roomItems;
+    localStorage.setItem("amsu_save", JSON.stringify(saveData));
+    showToast();
+    print("Progress filed with the Consortium. (Game saved.)", "success");
+  } catch(e) {
+    print("Save failed. The filing cabinet is jammed.", "error");
+  }
+}
+
+function autoSave() {
+  try {
+    var saveData = {
+      hp: G.hp, maxHp: G.maxHp, cunning: G.cunning, nerve: G.nerve,
+      inventory: G.inventory.slice(),
+      location: G.location, moves: G.moves, score: G.score,
+      flags: JSON.parse(JSON.stringify(G.flags)),
+      combat: G.combat ? JSON.parse(JSON.stringify(G.combat)) : null
+    };
+    var roomItems = {};
+    for (var k in ROOMS) { roomItems[k] = (ROOMS[k].items || []).slice(); }
+    saveData.roomItems = roomItems;
+    localStorage.setItem("amsu_autosave", JSON.stringify(saveData));
+  } catch(e) {}
+}
+
+function loadGame(fromTitle) {
+  try {
+    var raw = localStorage.getItem("amsu_save") || localStorage.getItem("amsu_autosave");
+    if (!raw) {
+      if (!fromTitle) print("No save found. The Consortium has no record of your previous service.", "error");
+      return false;
+    }
+    var data = JSON.parse(raw);
+    G.hp = data.hp; G.maxHp = data.maxHp;
+    G.cunning = data.cunning; G.nerve = data.nerve;
+    G.inventory = data.inventory;
+    G.location = data.location; G.moves = data.moves; G.score = data.score;
+    G.flags = data.flags;
+    G.combat = data.combat || null;
+    if (data.roomItems) {
+      for (var k in data.roomItems) {
+        if (ROOMS[k]) ROOMS[k].items = data.roomItems[k];
+      }
+    }
+    if (fromTitle) {
+      document.getElementById("title-screen").style.display = "none";
+    }
+    print("Previous service record restored. Welcome back, Deliverer.", "success");
+    describeRoom(true);
+    updateStats();
+    return true;
+  } catch(e) {
+    print("Save data corrupted. The Consortium apologises.", "error");
+    return false;
+  }
+}
+
+function showToast() {
+  var t = document.getElementById("save-toast");
+  t.classList.add("show");
+  setTimeout(function() { t.classList.remove("show"); }, 2500);
+}
+
+// ════════════════════════════════════════════════════════
+//  GAME START
+// ════════════════════════════════════════════════════════
+
+function startNewGame() {
+  // Reset room items to defaults
+  ROOMS["postal_depot"].items = ["delivery_form", "rubber_stamp", "lamp"];
+  ROOMS["kings_road"].items = ["cheese"];
+  ROOMS["uncertain_forest"].items = ["mushroom"];
+  ROOMS["village_shop"].items = ["potion"];
+
+  G = freshState();
+  document.getElementById("title-screen").style.display = "none";
+  document.getElementById("output").innerHTML = "";
+
+  print("", "divider");
+  print("A MATTER OF SOME URGENCY", "title");
+  print("An Adventure in Several Rooms and Considerable Inconvenience", "system");
+  print("", "divider");
+  print("The date is the fourteenth of Octember.", "normal");
+  print("You know this because the calendar says so, and the calendar has never been wrong about anything except the year, which it has been updating manually since 1987 and has now lost track of.", "normal");
+  print("", "normal");
+  print("You are <b>Crabwick Pell</b>, Licensed Deliverer (Third Class, Provisional), employed by the Omnipotent Postal Consortium — an organisation so ancient and bureaucratically entrenched that it predates several of the gods to whom it has delivered overdue invoices.", "normal");
+  print("", "normal");
+  print("On your person: one letter. The seal is the colour of a minor regret. The address reads: <i>Mr. Horace Dunt, 1 Cobble End, Mudwick-Under-Sorrow</i>. The word URGENT has been stamped on it seventeen times.", "normal");
+  print("", "normal");
+  print("Your assignment is simple. Your route is not.", "normal");
+  print("", "divider");
+
+  G.flags.bridge_locked = true;
+  G.flags.dragon_locked = true;
+
+  describeRoom(true);
+  updateStats();
+
+  document.getElementById("cmd-input").focus();
+}
+
+// ════════════════════════════════════════════════════════
+//  INPUT HANDLING
+// ════════════════════════════════════════════════════════
+
+document.addEventListener("DOMContentLoaded", function() {
+  var input = document.getElementById("cmd-input");
+
+  input.addEventListener("keydown", function(e) {
+    if (e.key === "Enter") {
+      var val = input.value;
+      if (val.trim()) {
+        cmdHistory.unshift(val);
+        if (cmdHistory.length > 50) cmdHistory.pop();
+        cmdHistIdx = -1;
+        parseCommand(val);
+        input.value = "";
+      }
+    } else if (e.key === "ArrowUp") {
+      e.preventDefault();
+      if (cmdHistIdx < cmdHistory.length - 1) {
+        cmdHistIdx++;
+        input.value = cmdHistory[cmdHistIdx];
+      }
+    } else if (e.key === "ArrowDown") {
+      e.preventDefault();
+      if (cmdHistIdx > 0) {
+        cmdHistIdx--;
+        input.value = cmdHistory[cmdHistIdx];
+      } else {
+        cmdHistIdx = -1;
+        input.value = "";
+      }
+    }
+  });
+
+  // Check for existing save
+  if (localStorage.getItem("amsu_save") || localStorage.getItem("amsu_autosave")) {
+    document.getElementById("load-btn").style.display = "inline-block";
+  }
+
+  // Keep input focused
+  document.addEventListener("click", function() {
+    if (document.getElementById("title-screen").style.display === "none") {
+      input.focus();
+    }
+  });
+});
+</script>
+</body>
+</html>
